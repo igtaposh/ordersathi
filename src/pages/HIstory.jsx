@@ -17,16 +17,12 @@ function History() {
 
         {/* Order History Section */}
         <div>
-          <div className={`p-2 shadow-md rounded-xl transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-            <Orders />
-          </div>
+          <Orders />
         </div>
 
         {/* Stock History Section */}
         <div>
-          <div className={`p-2 shadow-md rounded-xl transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-            <Stocks />
-          </div>
+          <Stocks />
         </div>
 
       </div>

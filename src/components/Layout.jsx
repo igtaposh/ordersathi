@@ -9,10 +9,11 @@ import NavHeader from './NavHeader';
 import { HiOutlineDocumentReport, HiOutlineUserGroup } from 'react-icons/hi';
 import { GiWineBottle } from 'react-icons/gi';
 import { useTheme } from '../context/ThemeContext';
+import { TbChartHistogram } from "react-icons/tb";
 
 const Layout = () => {
   const navigate = useNavigate();
-  const { setToken } = useContext(AuthContext);
+  const { user, setToken } = useContext(AuthContext);
   const { theme } = useTheme();
   const location = window.location.pathname;
 
@@ -34,7 +35,7 @@ const Layout = () => {
     <div className={`max-w-[500px] mx-auto top-0 w-full flex flex-col justify-between items-center p-6 shadow-sm ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}>
       {/* nav bar */}
 
-      <div className={`fixed bottom-0 max-w-[500px] w-full flex justify-between p-[10px] z-50 transition-colors duration-200 border-t-4 border-gray-200 ${theme === 'dark'
+      <div className={`fixed bottom-0 max-w-[500px] w-full flex justify-between items-center p-[10px] z-50 transition-colors duration-200 border-t-4 border-gray-200 ${theme === 'dark'
         ? 'bg-gray-800 border-t border-gray-700'
         : 'bg-white'
         }`}>
@@ -84,10 +85,12 @@ const Layout = () => {
             ? `flex flex-col items-center text-[0.6rem] font-semibold px-4 py-2 rounded-xl opacity-90 gap-[2px] transition-colors duration-200 ${theme === 'dark' ? 'text-blue-400 bg-gray-700' : 'text-blue-600 bg-gray-200'}`
             : `flex flex-col items-center text-[0.6rem] font-semibold px-4 py-2 rounded-xl opacity-90 gap-[2px] transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`
             }`}>
-            <div className={`object-fit w-5 h-5 rounded-full overflow-hidden border-[1px] flex justify-center items-center ${theme === 'dark' ? 'border-gray-400' : 'border-black'}`}>
-              <img src={logo_image} alt="Logo" />
+            <div className={`text-lg transition-colors duration-200 ${location === '/dashboard'
+              ? theme === 'dark' ? 'text-blue-400' : 'text-blue-600'
+              : theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+              <TbChartHistogram />
             </div>
-            <span>OrderSathi</span>
+            <span>Dashboard</span>
           </div>
         </Link>
 
@@ -126,7 +129,10 @@ const Layout = () => {
             ? `flex flex-col items-center text-[0.6rem] font-semibold px-4 py-2 rounded-xl opacity-90 gap-[2px] transition-colors duration-200 ${theme === 'dark' ? 'text-blue-400 bg-gray-700' : 'text-blue-600 bg-gray-200'}`
             : `flex flex-col items-center text-[0.6rem] font-semibold px-4 py-2 rounded-xl opacity-90 gap-[2px] transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`
             }`}>
-            <div className={`text-xl w-5 h-5 rounded-full border-[1px] border-red-600 flex justify-center items-center transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-600' : 'bg-slate-950'}`}>
+            <div className={`text-lg w-4 h-4 p-2 rounded-full flex justify-center items-center transition-colors duration-200 bg-orange-100`}>
+              <span className='text-orange-600 font-semibold text-xs sm:text-lg text-center'>
+                {user.name?.charAt(0)?.toUpperCase() || 'U'}
+              </span>
             </div>
             <span>Profile</span>
           </div>

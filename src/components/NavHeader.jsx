@@ -1,10 +1,12 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png';
 import { GiPlagueDoctorProfile } from 'react-icons/gi';
 import { IoArrowBackCircleOutline } from "react-icons/io5";
 import { MdOutlineKeyboardArrowLeft } from "react-icons/md";
 import { useTheme } from '../context/ThemeContext';
+import { AuthContext } from '../context/AuthContext';
+
 
 /**
  * NavHeader Component - Navigation Header
@@ -18,6 +20,8 @@ function NavHeader() {
    const navigate = useNavigate();
    const { theme } = useTheme();
 
+   // Define the logo path
+   const { user } = useContext(AuthContext);
    // Get current pathname for page detection
    const pathname = location.pathname;
    /**
@@ -137,11 +141,14 @@ function NavHeader() {
             {/* App Logo (Optional - shown on dashboard) */}
             {pathname === '/dashboard' && (
                <div className='flex items-center gap-2'>
-                  <img
+                  {/* <img
                      src={logo}
                      alt="OrderSathi Logo"
                      className='w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-full object-cover'
-                  />
+                  /> */}
+                  <span className='text-orange-600 font-semibold text-sm sm:text-lg'>
+                     {user.name?.charAt(0)?.toUpperCase() || 'U'}
+                  </span>
                </div>
             )}
 

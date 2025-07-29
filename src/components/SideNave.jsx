@@ -116,7 +116,7 @@ function SideNave({ isClosed, onClose }) {
 
       {/* Sidebar Container */}
       <div
-        className={`top-0 right-0 h-screen w-full sm:w-80 md:w-96 lg:w-[400px] max-w-[90vw] shadow-2xl transition-transform duration-300 z-50 flex flex-col ${theme === 'dark'
+        className={`top-0 right-0 h-dvh w-full sm:w-80 md:w-96 lg:w-[400px] max-w-[90vw] shadow-2xl transition-transform duration-300 z-50 flex flex-col ${theme === 'dark'
           ? 'bg-gray-900 text-white'
           : 'bg-zinc-100'
           } ${isClosed ? 'fixed' : 'hidden'}`}

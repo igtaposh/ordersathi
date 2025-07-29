@@ -4,7 +4,7 @@ import axios from 'axios';
  * Base URL for API requests
  * In production, use the environment variable or the deployed API URL
  */
-const baseURL = import.meta.env.VITE_API_URL || 'https://ordersathi.onrender.com/api';
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 /**
  * Create axios instance with base URL and default headers

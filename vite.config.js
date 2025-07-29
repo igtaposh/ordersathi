@@ -6,7 +6,12 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': 'http://localhost:8080' || 'https://ordersathi.onrender.com/', // Proxy API requests to backend server
+      '/api': {
+        target: 'https://ordersathi.onrender.com', // Change this to your backend API URL
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
     }
-  }
+  },
 })

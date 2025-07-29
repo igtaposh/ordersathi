@@ -19,7 +19,7 @@ const History = lazy(() => import('./pages/HIstory'));
 const StockReport = lazy(() => import('./pages/StockReport'));
 const EditProfile = lazy(() => import('./pages/EditProfile'));
 const ProductProfile = lazy(() => import('./pages/ProductProfile'));
-const SupplierProfile = lazy(() => import('./pages/supplierProfile'));
+const SupplierProfile = lazy(() => import('./pages/SupplierProfile'));
 const EditSupplier = lazy(() => import('./pages/EditSupplier'));
 const EditProduct = lazy(() => import('./pages/EditProduct'));
 

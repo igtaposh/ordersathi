@@ -162,7 +162,7 @@ function StockReport() {
    };
 
    return (
-      <div className={`max-w-[500px] w-screen h-screen mx-auto py-2 px-4 transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-900' : 'bg-zinc-200'}`}>
+      <div className={`max-w-[500px] w-screen min-h-screen mb-16 mx-auto py-2 px-4 transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-900' : 'bg-zinc-200'}`}>
          <div className={`mt-12 flex flex-col gap-4 shadow p-4 rounded-xl text-xs transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
 
             {/* Message Display */}

@@ -5,6 +5,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { FaRegEdit } from "react-icons/fa";
 import { SupplierContext } from '../context/SupplierContext'
 import { AiOutlineLoading3Quarters } from 'react-icons/ai'
+import { useTheme } from '../context/ThemeContext'
 
 /**
  * SupplierProfile Component
@@ -15,6 +16,7 @@ function SupplierProfile() {
   const { id } = useParams();
   const { supplier, setSupplier } = useContext(SupplierContext);
   const navigate = useNavigate();
+  const { theme } = useTheme();
 
   // Supplier data state
   const [supplierProfile, setSupplierProfile] = useState({});
@@ -128,7 +130,7 @@ function SupplierProfile() {
       {/* Loading overlay for initial data fetch */}
       {loadingStates.fetchingSupplier && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg flex items-center gap-3">
+          <div className={`p-6 rounded-lg flex items-center gap-3 transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-900'}`}>
             <AiOutlineLoading3Quarters className="animate-spin text-blue-500 text-xl" />
             <span>Loading supplier data...</span>
           </div>
@@ -138,15 +140,15 @@ function SupplierProfile() {
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">Confirm Deletion</h3>
-            <p className="text-gray-600 mb-6">
+          <div className={`p-6 rounded-lg max-w-md w-full mx-4 transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
+            <h3 className={`text-lg font-semibold mb-4 transition-colors duration-200 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Confirm Deletion</h3>
+            <p className={`mb-6 transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
               Are you sure you want to delete this supplier? This action cannot be undone and will also affect any associated products.
             </p>
             <div className="flex gap-3 justify-end">
               <button
                 onClick={cancelDelete}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                className={`px-4 py-2 rounded-md transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-600 text-gray-200 hover:bg-gray-500' : 'bg-gray-300 text-gray-700 hover:bg-gray-400'}`}
               >
                 Cancel
               </button>
@@ -163,17 +165,25 @@ function SupplierProfile() {
 
       {/* Message display */}
       {message.text && (
-        <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-40 px-6 py-3 rounded-lg shadow-lg transition-all duration-300 ${message.type === 'success' ? 'bg-green-500 text-white' :
-            message.type === 'error' ? 'bg-red-500 text-white' :
-              'bg-blue-500 text-white'
+        <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-40 px-6 py-3 rounded-lg shadow-lg transition-all duration-300 ${message.type === 'success'
+          ? theme === 'dark'
+            ? 'bg-green-900 text-green-200 border border-green-700'
+            : 'bg-green-500 text-white'
+          : message.type === 'error'
+            ? theme === 'dark'
+              ? 'bg-red-900 text-red-200 border border-red-700'
+              : 'bg-red-500 text-white'
+            : theme === 'dark'
+              ? 'bg-blue-900 text-blue-200 border border-blue-700'
+              : 'bg-blue-500 text-white'
           }`}>
           {message.text}
         </div>
       )}
 
-      <div className='max-w-[500px] w-screen min-h-screen bg-neutral-200 mx-auto p-4 flex flex-col items-center'>
+      <div className={`max-w-[500px] w-screen min-h-screen mx-auto p-4 flex flex-col items-center transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-900' : 'bg-neutral-200'}`}>
         {/* Supplier Header Card */}
-        <div className='rounded-xl shadow w-full flex bg-white justify-between items-center mt-8 p-4'>
+        <div className={`rounded-xl shadow w-full flex justify-between items-center mt-8 p-4 transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
           <div className='flex items-center gap-4'>
             <div>
               <img
@@ -181,21 +191,20 @@ function SupplierProfile() {
                 alt='Supplier'
                 className='w-12 h-12 rounded-full object-cover'
               />
+
+
             </div>
-            <div className='flex flex-col gap-1'>
-              <h1 className='text-lg font-semibold'>{supplierProfile.name || 'Loading...'}</h1>
-              {supplierProfile.email && (
-                <p className='text-sm text-gray-600'>{supplierProfile.email}</p>
-              )}
-            </div>
+            <span className={`transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-900'}`}>{supplierProfile.name || '-'}</span>
+
+
           </div>
           {!loadingStates.fetchingSupplier && (
             <Link
               to={`/edit-supplier/${id}`}
-              className='flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors'
+              className={`flex items-center gap-2 transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300 hover:text-blue-400' : 'text-blue-600 hover:text-blue-800'}`}
             >
               <span>
-                <FaRegEdit className='text-zinc-900 text-xs cursor-pointer' />
+                <FaRegEdit className={`text-xs cursor-pointer transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300' : 'text-zinc-900'}`} />
               </span>
               <span className='text-sm'>Edit</span>
             </Link>
@@ -203,16 +212,16 @@ function SupplierProfile() {
         </div>
 
         {/* Supplier Details Card */}
-        <div className='bg-white rounded-xl shadow p-4 mt-4 w-full flex flex-col gap-4'>
+        <div className={`rounded-xl shadow p-4 mt-4 w-full flex flex-col gap-4 transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
           <div className='flex justify-between items-center'>
-            <h3 className='text-lg font-semibold'>Supplier Details</h3>
+            <h3 className={`text-lg font-semibold transition-colors duration-200 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Supplier Details</h3>
             {!loadingStates.fetchingSupplier && (
               <Link
                 to={`/edit-supplier/${id}`}
-                className='flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors'
+                className={`flex items-center gap-2 transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300 hover:text-blue-400' : 'text-blue-600 hover:text-blue-800'}`}
               >
                 <span>
-                  <FaRegEdit className='text-zinc-900 text-xs cursor-pointer' />
+                  <FaRegEdit className={`text-xs cursor-pointer transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300' : 'text-zinc-900'}`} />
                 </span>
                 <span className='text-sm'>Edit</span>
               </Link>
@@ -222,25 +231,22 @@ function SupplierProfile() {
           {loadingStates.fetchingSupplier ? (
             <div className="flex items-center justify-center py-8">
               <AiOutlineLoading3Quarters className="animate-spin text-blue-500 text-xl" />
-              <span className="ml-2">Loading details...</span>
+              <span className={`ml-2 transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-900'}`}>Loading details...</span>
             </div>
           ) : (
             <div className='flex flex-col text-sm gap-3'>
-              <div className='flex justify-between items-center py-2 border-b border-gray-100'>
-                <span className="font-medium text-gray-700">Name:</span>
-                <span className="text-gray-900">{supplierProfile.name || '-'}</span>
+              <div className={`flex justify-between items-center py-2 border-b transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600' : 'border-gray-100'}`}>
+                <span className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Name:</span>
+                <span className={`transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-900'}`}>{supplierProfile.name || '-'}</span>
               </div>
-              <div className='flex justify-between items-center py-2 border-b border-gray-100'>
-                <span className="font-medium text-gray-700">Email:</span>
-                <span className="text-gray-900">{supplierProfile.email || '-'}</span>
-              </div>
-              <div className='flex justify-between items-center py-2 border-b border-gray-100'>
-                <span className="font-medium text-gray-700">Phone:</span>
-                <span className="text-gray-900">{supplierProfile.contact || '-'}</span>
+
+              <div className={`flex justify-between items-center py-2 border-b transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600' : 'border-gray-100'}`}>
+                <span className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Phone:</span>
+                <span className={`transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-900'}`}>{supplierProfile.contact || '-'}</span>
               </div>
               <div className='flex justify-between items-start py-2'>
-                <span className="font-medium text-gray-700">Address:</span>
-                <span className="text-gray-900 text-right max-w-[60%]">
+                <span className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Address:</span>
+                <span className={`text-right max-w-[60%] transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-900'}`}>
                   {supplierProfile.address || '-'}
                 </span>
               </div>
@@ -249,8 +255,8 @@ function SupplierProfile() {
         </div>
 
         {/* Supplier Actions Card */}
-        <div className='bg-white rounded-xl shadow p-4 mt-4 w-full flex flex-col gap-4'>
-          <h3 className='text-lg font-semibold'>Supplier Actions</h3>
+        <div className={`rounded-xl shadow p-4 mt-4 w-full flex flex-col gap-4 transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
+          <h3 className={`text-lg font-semibold transition-colors duration-200 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Supplier Actions</h3>
           <div className="space-y-3">
             <Link
               to={`/edit-supplier/${id}`}
@@ -260,7 +266,10 @@ function SupplierProfile() {
               Edit Supplier
             </Link>
             <button
-              className='w-full bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white px-4 py-3 rounded-lg shadow transition-colors flex items-center justify-center gap-2'
+              className={`w-full px-4 py-3 rounded-lg shadow transition-colors flex items-center justify-center gap-2 ${loadingStates.deleting || loadingStates.fetchingSupplier
+                ? 'bg-red-300 cursor-not-allowed'
+                : 'bg-red-500 hover:bg-red-600 cursor-pointer'
+                } text-white`}
               onClick={handleDeleteClick}
               disabled={loadingStates.deleting || loadingStates.fetchingSupplier}
             >

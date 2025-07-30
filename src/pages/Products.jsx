@@ -15,7 +15,7 @@ const Products = () => {
    const { theme } = useTheme();
 
    // UI state for collapsible sections
-   const [productForm, setProductForm] = useState(true);
+   const [productForm, setProductForm] = useState(false);
    const [productList, setProductList] = useState(false);
 
    // Form state
@@ -150,6 +150,7 @@ const Products = () => {
             <div className='p-4'>
                {!productForm ? (
                   <div className={`p-4 rounded-xl shadow mb-6 grid grid-cols-2 gap-4 transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-700' : 'bg-white'}`}>
+
                      {/* Product Name Input */}
                      <input
                         type="text"
@@ -166,7 +167,7 @@ const Products = () => {
 
                      {/* Weight Input */}
                      <input
-                        type="text"
+                        type="number"
                         placeholder="Weight (e.g. 1kg, 500g)"
                         value={form.weight}
                         onChange={(e) => setForm({ ...form, weight: e.target.value })}
@@ -211,18 +212,28 @@ const Products = () => {
                      />
 
                      {/* Type Input */}
-                     <input
-                        type="text"
-                        placeholder="Type (piece, bag, etc)"
+
+                     <select
                         value={form.type}
                         onChange={(e) => setForm({ ...form, type: e.target.value })}
                         className={`border p-2 rounded outline-none transition-colors duration-200 ${theme === 'dark'
-                           ? 'bg-gray-600 border-gray-500 text-gray-100 placeholder-gray-400 focus:border-orange-500'
-                           : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-orange-700'
+                           ? 'bg-gray-600 border-gray-500 text-gray-100 focus:border-orange-500'
+                           : 'bg-white border-gray-300 text-gray-900 focus:border-orange-700'
                            }`}
                         disabled={isAddingProduct}
                         required
-                     />
+                     >
+                        <option value="">Select Type</option>
+                        <option value="Piece">Piece</option>
+                        <option value="Bag">Bag</option>
+                        <option value="Box">Box</option>
+                        <option value="Ltr">Ltr</option>
+                        <option value="Case">Case</option>
+                        <option value="Pkt">Pkt</option>
+                        <option value="Kg">Kg</option>
+                        <option value="Patta">Patta</option>
+                        <option value="Dozen">Dozen</option>
+                     </select>
 
                      {/* Supplier Selection */}
                      <select
@@ -240,7 +251,7 @@ const Products = () => {
                            <option key={s._id} value={s._id}>{s.name}</option>
                         ))}
                      </select>
-
+                     <p className='w-full text-xs col-span-2'><b>Note:</b> Enter weight in kilograms. Example: 500g → 0.5</p>
                      {/* Add Product Button */}
                      <button
                         onClick={handleAdd}
@@ -264,6 +275,7 @@ const Products = () => {
                         <span>{isAddingProduct ? 'Adding Product...' : 'Add Product'}</span>
                      </button>
                   </div>
+
                ) : (
                   <div className='flex items-center justify-between'>
                      <button
@@ -281,7 +293,7 @@ const Products = () => {
          </div>
 
          {/* Products List Section */}
-         <div className={`shadow-md rounded-xl mt-8 w-full flex flex-col transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
+         <div className={`shadow-md h-full mb-16 rounded-xl mt-8 w-full flex flex-col transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
             <div
                onClick={() => setProductList(!productList)}
                className={`p-2 flex items-center justify-between rounded-t-xl cursor-pointer transition-colors duration-200 ${theme === 'dark'

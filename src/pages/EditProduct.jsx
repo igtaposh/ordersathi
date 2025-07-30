@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import axiosInstance from '../api/axiosInstance'
 import { AiOutlineLoading3Quarters } from 'react-icons/ai'
+import { useTheme } from '../context/ThemeContext'
 
 /**
  * EditProduct Component
@@ -11,6 +12,7 @@ import { AiOutlineLoading3Quarters } from 'react-icons/ai'
 function EditProduct() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { theme } = useTheme();
 
   // Form state management
   const [form, setForm] = useState({
@@ -154,11 +156,11 @@ function EditProduct() {
   };
 
   return (
-    <div className='max-w-[500px] w-screen min-h-screen bg-neutral-200 mx-auto p-4 flex flex-col items-center'>
+    <div className={`max-w-[500px] w-screen min-h-screen mx-auto p-4 flex flex-col items-center transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-900' : 'bg-neutral-200'}`}>
       {/* Loading overlay for initial data fetch */}
       {loadingStates.fetchingProduct && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg flex items-center gap-3">
+          <div className={`p-6 rounded-lg flex items-center gap-3 transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-900'}`}>
             <AiOutlineLoading3Quarters className="animate-spin text-blue-500 text-xl" />
             <span>Loading product data...</span>
           </div>
@@ -167,25 +169,36 @@ function EditProduct() {
 
       {/* Message display */}
       {message.text && (
-        <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-40 px-6 py-3 rounded-lg shadow-lg transition-all duration-300 ${message.type === 'success' ? 'bg-green-500 text-white' :
-            message.type === 'error' ? 'bg-red-500 text-white' :
-              'bg-blue-500 text-white'
+        <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-40 px-6 py-3 rounded-lg shadow-lg transition-all duration-300 ${message.type === 'success'
+          ? theme === 'dark'
+            ? 'bg-green-900 text-green-200 border border-green-700'
+            : 'bg-green-500 text-white'
+          : message.type === 'error'
+            ? theme === 'dark'
+              ? 'bg-red-900 text-red-200 border border-red-700'
+              : 'bg-red-500 text-white'
+            : theme === 'dark'
+              ? 'bg-blue-900 text-blue-200 border border-blue-700'
+              : 'bg-blue-500 text-white'
           }`}>
           {message.text}
         </div>
       )}
 
-      <div className='bg-white shadow-md rounded-xl mt-8 w-full flex flex-col p-6 gap-4'>
-        <h2 className="text-2xl font-bold text-gray-800 text-center mb-4">Edit Product</h2>
+      <div className={`shadow-md rounded-xl mt-8 w-full flex flex-col p-6 gap-4 transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
+        <h2 className={`text-2xl font-bold text-center mb-4 transition-colors duration-200 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>Edit Product</h2>
 
         <form onSubmit={handleUpdate} className="space-y-4">
           {/* Product Name Field */}
           <div className='flex flex-col gap-2'>
-            <label className="font-medium text-gray-700">Product Name <span className="text-red-500">*</span></label>
+            <label className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Product Name <span className="text-red-500">*</span></label>
             <input
               value={form.name}
               onChange={e => setForm({ ...form, name: e.target.value })}
-              className='border border-gray-300 p-3 rounded-md outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors'
+              className={`border p-3 rounded-md outline-none focus:ring-1 transition-colors duration-200 ${theme === 'dark'
+                ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400'
+                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500'
+                }`}
               type="text"
               placeholder="Enter product name"
               disabled={loadingStates.updating || loadingStates.fetchingProduct}
@@ -195,11 +208,14 @@ function EditProduct() {
 
           {/* Product Type Field */}
           <div className='flex flex-col gap-2'>
-            <label className="font-medium text-gray-700">Product Type <span className="text-red-500">*</span></label>
+            <label className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Product Type <span className="text-red-500">*</span></label>
             <input
               value={form.type}
               onChange={e => setForm({ ...form, type: e.target.value })}
-              className='border border-gray-300 p-3 rounded-md outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors'
+              className={`border p-3 rounded-md outline-none focus:ring-1 transition-colors duration-200 ${theme === 'dark'
+                ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400'
+                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500'
+                }`}
               type="text"
               placeholder="Enter product type"
               disabled={loadingStates.updating || loadingStates.fetchingProduct}
@@ -209,11 +225,14 @@ function EditProduct() {
 
           {/* MRP Field */}
           <div className='flex flex-col gap-2'>
-            <label className="font-medium text-gray-700">MRP (₹) <span className="text-red-500">*</span></label>
+            <label className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>MRP (₹) <span className="text-red-500">*</span></label>
             <input
               value={form.mrp}
               onChange={e => setForm({ ...form, mrp: e.target.value })}
-              className='border border-gray-300 p-3 rounded-md outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors'
+              className={`border p-3 rounded-md outline-none focus:ring-1 transition-colors duration-200 ${theme === 'dark'
+                ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400'
+                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500'
+                }`}
               type="number"
               min="0"
               step="0.01"
@@ -225,11 +244,14 @@ function EditProduct() {
 
           {/* Rate Field */}
           <div className='flex flex-col gap-2'>
-            <label className="font-medium text-gray-700">Rate (₹) <span className="text-red-500">*</span></label>
+            <label className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Rate (₹) <span className="text-red-500">*</span></label>
             <input
               value={form.rate}
               onChange={e => setForm({ ...form, rate: e.target.value })}
-              className='border border-gray-300 p-3 rounded-md outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors'
+              className={`border p-3 rounded-md outline-none focus:ring-1 transition-colors duration-200 ${theme === 'dark'
+                ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400'
+                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500'
+                }`}
               type="number"
               min="0"
               step="0.01"
@@ -237,16 +259,19 @@ function EditProduct() {
               disabled={loadingStates.updating || loadingStates.fetchingProduct}
               required
             />
-            <small className="text-gray-500">Rate should not exceed MRP</small>
+            <small className={`transition-colors duration-200 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Rate should not exceed MRP</small>
           </div>
 
           {/* Weight Field */}
           <div className='flex flex-col gap-2'>
-            <label className="font-medium text-gray-700">Weight <span className="text-red-500">*</span></label>
+            <label className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Weight <span className="text-red-500">*</span></label>
             <input
               value={form.weight}
               onChange={e => setForm({ ...form, weight: e.target.value })}
-              className='border border-gray-300 p-3 rounded-md outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors'
+              className={`border p-3 rounded-md outline-none focus:ring-1 transition-colors duration-200 ${theme === 'dark'
+                ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400'
+                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500'
+                }`}
               type="text"
               placeholder="Enter weight (e.g., 1kg, 500g, 2L)"
               disabled={loadingStates.updating || loadingStates.fetchingProduct}
@@ -260,7 +285,7 @@ function EditProduct() {
       <div className='flex gap-4 mt-6 w-full'>
         <Link
           to={`/product-profile/${id}`}
-          className='flex-1 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-md text-center transition-colors'
+          className={`flex-1 px-6 py-3 rounded-md text-center transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-600 hover:bg-gray-500 text-gray-200' : 'bg-gray-500 hover:bg-gray-600 text-white'}`}
         >
           Cancel
         </Link>
@@ -268,7 +293,10 @@ function EditProduct() {
         <button
           onClick={handleUpdate}
           disabled={loadingStates.updating || loadingStates.fetchingProduct}
-          className='flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white px-6 py-3 rounded-md transition-colors flex items-center justify-center gap-2'
+          className={`flex-1 px-6 py-3 rounded-md transition-colors duration-200 flex items-center justify-center gap-2 ${loadingStates.updating || loadingStates.fetchingProduct
+            ? 'bg-blue-300 cursor-not-allowed'
+            : 'bg-blue-500 hover:bg-blue-600 cursor-pointer'
+            } text-white`}
         >
           {loadingStates.updating ? (
             <>

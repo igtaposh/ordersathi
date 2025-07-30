@@ -82,7 +82,7 @@ const Suppliers = () => {
   };
 
   return (
-    <div className={`max-w-[500px] w-screen min-h-screen mx-auto p-4 flex flex-col items-center transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-900' : 'bg-neutral-200'}`}>
+    <div className={`max-w-[500px] w-screen min-h-screen mx-auto mb-16 p-4 flex flex-col items-center transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-900' : 'bg-neutral-200'}`}>
 
       {/* Message Display */}
       {message.text && (

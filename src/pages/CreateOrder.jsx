@@ -159,23 +159,27 @@ const CreateOrder = () => {
       }
    };
 
+   // Calculate totals
+   const selectedProducts = Object.entries(quantities)
+      .filter(([_, qty]) => parseFloat(qty) > 0)
+      .map(([productId, quantity]) => {
+         const product = filteredProducts.find(p => p._id === productId);
+         return { product, quantity: parseInt(quantity) };
+      });
+
+   const totalAmount = selectedProducts.reduce((sum, item) => {
+      return sum + (item.product.rate * item.quantity);
+   }, 0);
+
+   const totalWeight = selectedProducts.reduce((sum, item) => {
+      const weightMatch = item.product.weight?.match(/(\d+(?:\.\d+)?)/);
+      const weightValue = weightMatch ? parseFloat(weightMatch[1]) : 0;
+      return sum + (weightValue * item.quantity);
+   }, 0);
+
    return (
       <div className={`max-w-[500px] w-screen min-h-screen mx-auto py-2 px-4 transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-900' : 'bg-zinc-200'}`}>
          <div className={`mt-12 mb-16 flex flex-col gap-4 shadow p-4 rounded-xl text-xs transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-
-            {/* Message Display */}
-            {message.text && (
-               <div className={`p-3 rounded-lg text-sm font-medium border transition-colors duration-200 ${message.type === 'success'
-                  ? theme === 'dark'
-                     ? 'bg-green-900 text-green-200 border-green-700'
-                     : 'bg-green-100 text-green-800 border-green-200'
-                  : theme === 'dark'
-                     ? 'bg-red-900 text-red-200 border-red-700'
-                     : 'bg-red-100 text-red-800 border-red-200'
-                  }`}>
-                  {message.text}
-               </div>
-            )}
 
             {/* Supplier Selection */}
             <div className='relative'>
@@ -203,6 +207,7 @@ const CreateOrder = () => {
                <thead>
                   <tr className={`transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`}>
                      <th className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>Product</th>
+
                      <th className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>MRP</th>
                      <th className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>Type</th>
                      <th className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>Qty</th>
@@ -212,13 +217,14 @@ const CreateOrder = () => {
                   {
                      filteredProducts.length === 0 && (
                         <tr>
-                           <td colSpan="4" className={`border p-2 text-center transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-400' : 'border-gray-300 text-gray-600'}`}>No products found</td>
+                           <td colSpan="5" className={`border p-2 text-center transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-400' : 'border-gray-300 text-gray-600'}`}>No products found</td>
                         </tr>
                      )
                   }
                   {filteredProducts.map((p) => (
                      <tr key={p._id} className={`transition-colors duration-200 ${theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}`}>
                         <td className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>{p.name}</td>
+
                         <td className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>₹{p.mrp}</td>
                         <td className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>{p.type}</td>
                         <td className={`border p-2 flex justify-center items-center transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600' : 'border-gray-300'}`}>
@@ -238,6 +244,41 @@ const CreateOrder = () => {
                   ))}
                </tbody>
             </table>
+
+            {/* Order Preview */}
+            {selectedProducts.length > 0 && (
+               <div className={`p-3 rounded-lg border transition-colors duration-200 ${theme === 'dark'
+                  ? 'bg-gray-700 border-gray-600'
+                  : 'bg-blue-50 border-blue-200'
+                  }`}>
+                  <h3 className={`font-semibold mb-2 text-sm transition-colors duration-200 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
+                     Order Preview
+                  </h3>
+                  <div className="flex justify-between items-center">
+                     <div className={`text-xs transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                        <div>Total Items: {selectedProducts.length}</div>
+                        <div>Total Weight: {totalWeight.toFixed(1)} kg</div>
+                     </div>
+                     <div className={`text-sm font-semibold transition-colors duration-200 ${theme === 'dark' ? 'text-green-400' : 'text-green-700'}`}>
+                        ₹{totalAmount.toFixed(2)}
+                     </div>
+                  </div>
+               </div>
+            )}
+
+            {/* Message Display */}
+            {message.text && (
+               <div className={`p-3 rounded-lg text-sm font-medium border transition-colors duration-200 ${message.type === 'success'
+                  ? theme === 'dark'
+                     ? 'bg-green-900 text-green-200 border-green-700'
+                     : 'bg-green-100 text-green-800 border-green-200'
+                  : theme === 'dark'
+                     ? 'bg-red-900 text-red-200 border-red-700'
+                     : 'bg-red-100 text-red-800 border-red-200'
+                  }`}>
+                  {message.text}
+               </div>
+            )}
 
             {/* Create Order Button */}
             <button

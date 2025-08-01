@@ -18,6 +18,10 @@ const Products = () => {
    const [productForm, setProductForm] = useState(false);
    const [productList, setProductList] = useState(false);
 
+   // Search state
+   const [searchTerm, setSearchTerm] = useState('');
+   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
    // Form state
    const [form, setForm] = useState({
       name: '',
@@ -67,6 +71,22 @@ const Products = () => {
       };
       fetchProducts();
    }, [setProducts]);
+
+   // Filter products based on search term
+   const filteredProducts = products.filter(p => {
+      return debouncedSearchTerm === '' ||
+         p.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+         p.type.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+         (p.supplierId?.name && p.supplierId.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()));
+   });
+
+   // Debounce search term
+   useEffect(() => {
+      const timer = setTimeout(() => {
+         setDebouncedSearchTerm(searchTerm);
+      }, 300);
+      return () => clearTimeout(timer);
+   }, [searchTerm]);
 
    // Clear messages after 5 seconds
    useEffect(() => {
@@ -324,63 +344,90 @@ const Products = () => {
                         </button>
                      </div>
                   ) : (
-                     <div className="overflow-x-auto">
-                        <table className='text-xs w-full'>
-                           <thead>
-                              <tr className={`transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-700' : 'bg-zinc-200'}`}>
-                                 <th className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>Name</th>
-                                 <th className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>MRP</th>
-                                 <th className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>Type</th>
-                                 <th className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>Rate</th>
-                                 <th className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>Weight</th>
-                                 <th className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>Supplier</th>
-                              </tr>
-                           </thead>
-                           <tbody>
-                              {products.length === 0 ? (
-                                 <tr>
-                                    <td colSpan="6" className={`border p-4 text-center transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-400' : 'border-gray-300 text-gray-500'}`}>
-                                       No products found. Add your first product above.
-                                    </td>
+                     <div>
+                        {/* Search Input */}
+                        <div className='relative mb-4'>
+                           <input
+                              type="text"
+                              placeholder="Search products by name, type, or supplier..."
+                              value={searchTerm}
+                              onChange={(e) => setSearchTerm(e.target.value)}
+                              className={`p-2 rounded-lg w-full text-sm outline-none border transition-colors duration-200 ${theme === 'dark'
+                                 ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400 focus:border-orange-500'
+                                 : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-orange-700'
+                                 }`}
+                           />
+                           {searchTerm && (
+                              <button
+                                 onClick={() => setSearchTerm('')}
+                                 className={`absolute right-2 top-2 text-sm transition-colors duration-200 ${theme === 'dark'
+                                    ? 'text-gray-400 hover:text-gray-200'
+                                    : 'text-gray-500 hover:text-gray-700'
+                                    }`}
+                              >
+                                 ✕
+                              </button>
+                           )}
+                        </div>
+
+                        <div className="overflow-x-auto">
+                           <table className='text-xs w-full'>
+                              <thead>
+                                 <tr className={`transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-700' : 'bg-zinc-200'}`}>
+                                    <th className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>Name</th>
+                                    <th className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>MRP</th>
+                                    <th className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>Type</th>
+                                    <th className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>Rate</th>
+                                    <th className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>Weight</th>
+                                    <th className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>Supplier</th>
                                  </tr>
-                              ) : (
-                                 products.map((p) => (
-                                    <tr key={p._id} className={`border-b transition-colors duration-200 ${theme === 'dark' ? 'hover:bg-gray-700 border-gray-600' : 'hover:bg-gray-50 border-gray-200'}`}>
-                                       <td className={`border p-2 text-center transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600' : 'border-gray-300'}`}>
-                                          <Link
-                                             to={`/product-profile/${p._id}`}
-                                             className={`underline transition-colors duration-200 ${theme === 'dark'
-                                                ? 'text-blue-400 hover:text-blue-300'
-                                                : 'text-blue-600 hover:text-blue-800'
-                                                }`}
-                                          >
-                                             {p.name}
-                                          </Link>
+                              </thead>
+                              <tbody>
+                                 {filteredProducts.length === 0 ? (
+                                    <tr>
+                                       <td colSpan="6" className={`border p-4 text-center transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-400' : 'border-gray-300 text-gray-500'}`}>
+                                          {searchTerm ? 'No products found matching your search' : 'No products found. Add your first product above.'}
                                        </td>
-                                       <td className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>₹{p.mrp || "---"}</td>
-                                       <td className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>{p.type || "---"}</td>
-                                       <td className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>₹{p.rate || "---"}</td>
-                                       <td className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>{p.weight || "---"}</td>
-                                       <td className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600' : 'border-gray-300'}`}>
-                                          {p.supplierId ? (
+                                    </tr>
+                                 ) : (
+                                    filteredProducts.map((p) => (
+                                       <tr key={p._id} className={`border-b transition-colors duration-200 ${theme === 'dark' ? 'hover:bg-gray-700 border-gray-600' : 'hover:bg-gray-50 border-gray-200'}`}>
+                                          <td className={`border p-2 text-center transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600' : 'border-gray-300'}`}>
                                              <Link
-                                                to={`/supplier-profile/${p.supplierId._id}`}
+                                                to={`/product-profile/${p._id}`}
                                                 className={`underline transition-colors duration-200 ${theme === 'dark'
                                                    ? 'text-blue-400 hover:text-blue-300'
                                                    : 'text-blue-600 hover:text-blue-800'
                                                    }`}
                                              >
-                                                {p.supplierId.name}
+                                                {p.name}
                                              </Link>
-                                          ) : (
-                                             <span className={`transition-colors duration-200 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>No Supplier</span>
-                                          )}
-                                       </td>
-                                    </tr>
-                                 ))
-                              )}
-                           </tbody>
-                        </table>
+                                          </td>
+                                          <td className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>₹{p.mrp || "---"}</td>
+                                          <td className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>{p.type || "---"}</td>
+                                          <td className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>₹{p.rate || "---"}</td>
+                                          <td className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>{p.weight || "---"}</td>
+                                          <td className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600' : 'border-gray-300'}`}>
+                                             {p.supplierId ? (
+                                                <Link
+                                                   to={`/supplier-profile/${p.supplierId._id}`}
+                                                   className={`underline transition-colors duration-200 ${theme === 'dark'
+                                                      ? 'text-blue-400 hover:text-blue-300'
+                                                      : 'text-blue-600 hover:text-blue-800'
+                                                      }`}
+                                                >
+                                                   {p.supplierId.name}
+                                                </Link>
+                                             ) : (
+                                                <span className={`transition-colors duration-200 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>No Supplier</span>
+                                             )}
+                                          </td>
+                                       </tr>
+                                    ))
+                                 )}
+                              </tbody>
+                           </table>
+                        </div>
                      </div>
                   )}
                </div>

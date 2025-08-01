@@ -16,6 +16,10 @@ const CreateOrder = () => {
    const [quantities, setQuantities] = useState({});
    const [orderId, setOrderId] = useState(null);
 
+   // Search state
+   const [searchTerm, setSearchTerm] = useState('');
+   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
    // Loading states
    const [isCreatingOrder, setIsCreatingOrder] = useState(false);
    const [isDownloadingPDF, setIsDownloadingPDF] = useState({ shopkeeper: false, supplier: false });
@@ -64,8 +68,22 @@ const CreateOrder = () => {
    // Get the selected supplier ID (default to first supplier if none selected)
    const selectedSupplierId = selectedSupplier || suppliers[0]?._id;
 
-   // Filter products based on selected supplier
-   const filteredProducts = products.filter(p => p.supplierId?._id === selectedSupplierId || p.supplierId === selectedSupplierId);
+   // Filter products based on selected supplier and search term
+   const filteredProducts = products.filter(p => {
+      const matchesSupplier = p.supplierId?._id === selectedSupplierId || p.supplierId === selectedSupplierId;
+      const matchesSearch = debouncedSearchTerm === '' ||
+         p.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+         p.type.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
+      return matchesSupplier && matchesSearch;
+   });
+
+   // Debounce search term
+   useEffect(() => {
+      const timer = setTimeout(() => {
+         setDebouncedSearchTerm(searchTerm);
+      }, 300);
+      return () => clearTimeout(timer);
+   }, [searchTerm]);
 
    // Clear messages after 5 seconds
    useEffect(() => {
@@ -202,12 +220,37 @@ const CreateOrder = () => {
                </span>
             </div>
 
+            {/* Search Input */}
+            <div className='relative'>
+               <input
+                  type="text"
+                  placeholder="Search products by name or type..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className={`p-2 rounded-lg w-full text-sm outline-none border transition-colors duration-200 ${theme === 'dark'
+                     ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400 focus:border-blue-400'
+                     : 'bg-white border-zinc-300 text-gray-900 placeholder-gray-500 focus:border-blue-500'
+                     }`}
+                  disabled={isCreatingOrder}
+               />
+               {searchTerm && (
+                  <button
+                     onClick={() => setSearchTerm('')}
+                     className={`absolute right-2 top-2 text-sm transition-colors duration-200 ${theme === 'dark'
+                        ? 'text-gray-400 hover:text-gray-200'
+                        : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                  >
+                     ✕
+                  </button>
+               )}
+            </div>
+
             {/* Products Table */}
             <table className={`w-full text-xs border rounded-lg overflow-hidden transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600' : 'border-gray-300'}`}>
                <thead>
                   <tr className={`transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`}>
                      <th className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>Product</th>
-
                      <th className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>MRP</th>
                      <th className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>Type</th>
                      <th className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>Qty</th>
@@ -217,14 +260,15 @@ const CreateOrder = () => {
                   {
                      filteredProducts.length === 0 && (
                         <tr>
-                           <td colSpan="5" className={`border p-2 text-center transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-400' : 'border-gray-300 text-gray-600'}`}>No products found</td>
+                           <td colSpan="4" className={`border p-2 text-center transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-400' : 'border-gray-300 text-gray-600'}`}>
+                              {searchTerm ? 'No products found matching your search' : 'No products found'}
+                           </td>
                         </tr>
                      )
                   }
                   {filteredProducts.map((p) => (
                      <tr key={p._id} className={`transition-colors duration-200 ${theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}`}>
                         <td className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>{p.name}</td>
-
                         <td className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>₹{p.mrp}</td>
                         <td className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>{p.type}</td>
                         <td className={`border p-2 flex justify-center items-center transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600' : 'border-gray-300'}`}>

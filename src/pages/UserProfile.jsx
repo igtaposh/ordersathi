@@ -1,268 +1,369 @@
-import React, { useContext, useState } from 'react';
-import NavHeader from '../components/NavHeader';
-import { AuthContext } from '../context/AuthContext';
-import defaultAvatar from '../assets/logo.png';
-import axiosInstance, { setAuthToken } from '../api/axiosInstance';
-import { Link, useNavigate } from 'react-router-dom';
-import { FaRegEdit, FaSignOutAlt } from "react-icons/fa";
-import { AiOutlineLoading3Quarters } from 'react-icons/ai';
-import { useTheme } from '../context/ThemeContext';
+import React, { useContext, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { FiEdit, FiLogOut, FiTrash2 } from "react-icons/fi";
+import { CiEdit } from "react-icons/ci";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { AuthContext } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
+import axiosInstance, { setAuthToken } from "../api/axiosInstance";
+import { IoArrowBack, IoCameraOutline } from "react-icons/io5";
 
-/**
- * UserProfile component - Displays and manages user profile information
- * Allows users to view profile details, edit profile, logout, and delete account
- */
 function UserProfile() {
-   // Context hooks
-   const { user, setUser, setToken } = useContext(AuthContext);
-   const navigate = useNavigate();
-   const { theme } = useTheme();
+  // Context hooks
+  const { user, setUser, setToken } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const { theme } = useTheme();
 
-   // Form state
-   const [editMode, setEditMode] = useState(false);
-   const [form, setForm] = useState({
-      userName: user?.name || "",
-      email: user?.email || "",
-      phone: user?.phone || "",
-      shopName: user?.shopName || "",
-   });
+  // Form state
+  const [editMode, setEditMode] = useState(false);
+  const [form, setForm] = useState({
+    userName: user?.name || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+    shopName: user?.shopName || "",
+  });
 
-   // Loading states for different actions
-   const [loadingStates, setLoadingStates] = useState({
-      updating: false,
-      deleting: false,
-      logout: false
-   });
+  // Loading states for different actions
+  const [loadingStates, setLoadingStates] = useState({
+    updating: false,
+    deleting: false,
+    logout: false,
+  });
 
-   // Message state for success/error feedback
-   const [message, setMessage] = useState({ type: '', text: '' });
+  // Message state for success/error feedback
+  const [message, setMessage] = useState({ type: "", text: "" });
+  
+  /**
+   * Handles profile update
+   * @param {Event} e - Form submit event
+   */
+  const handleUpdate = async (e) => {
+    e.preventDefault();
 
-   // Clear messages after 5 seconds
-   React.useEffect(() => {
-      if (message.text) {
-         const timer = setTimeout(() => {
-            setMessage({ type: '', text: '' });
-         }, 5000);
-         return () => clearTimeout(timer);
+    // Validation
+    if (!form.userName.trim()) {
+      setMessage({ type: "error", text: "User name is required" });
+      return;
+    }
+
+    setLoadingStates((prev) => ({ ...prev, updating: true }));
+    setMessage({ type: "", text: "" }); // Clear any existing messages
+
+    try {
+      const res = await axiosInstance.put("/auth/update-profile", form);
+      setUser(res.data.user);
+      setEditMode(false);
+      setMessage({ type: "success", text: "Profile updated successfully!" });
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.msg ||
+        "Failed to update profile. Please try again.";
+      setMessage({ type: "error", text: errorMessage });
+    } finally {
+      setLoadingStates((prev) => ({ ...prev, updating: false }));
+    }
+  };
+
+  /**
+   * Handles account deletion with confirmation
+   */
+  const handleDelete = async () => {
+    // Confirmation dialog
+    if (
+      !window.confirm(
+        "Are you sure you want to delete your account? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    setLoadingStates((prev) => ({ ...prev, deleting: true }));
+    setMessage({ type: "", text: "" }); // Clear any existing messages
+
+    try {
+      await axiosInstance.delete("/auth/delete-account");
+
+      // Clear user data
+      setUser(null);
+      setToken(null);
+      setAuthToken(null);
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+
+      setMessage({
+        type: "success",
+        text: "Account deleted successfully. Redirecting...",
+      });
+
+      // Small delay before navigation to show success message
+      setTimeout(() => {
+        navigate("/register");
+      }, 2000);
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.msg ||
+        "Failed to delete account. Please try again.";
+      setMessage({ type: "error", text: errorMessage });
+    } finally {
+      setLoadingStates((prev) => ({ ...prev, deleting: false }));
+    }
+  };
+  /**
+   * Handles user logout
+   */
+  const handleLogout = async () => {
+    setLoadingStates((prev) => ({ ...prev, logout: true }));
+    setMessage({ type: "", text: "" }); // Clear any existing messages
+
+    try {
+      const res = await axiosInstance.post("/auth/logout");
+      if (res.status === 200) {
+        // Clear user data
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setAuthToken(null);
+        setUser(null);
+        setToken(null);
+
+        setMessage({
+          type: "success",
+          text: "Logged out successfully. Redirecting...",
+        });
+
+        navigate("/login");
       }
-   }, [message]);
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.msg || "Logout failed. Please try again.";
+      setMessage({ type: "error", text: errorMessage });
+    } finally {
+      setLoadingStates((prev) => ({ ...prev, logout: false }));
+    }
+  };
 
+  return (
+    <motion.div
+      initial={{ right: "-100%" }}
+      animate={{ right: 0 }}
+      exit={{ right: "-100%" }}
+      className={`max-w-[500px] w-screen min-h-screen mx-auto relative ${
+        theme === "dark" ? "bg-gray-900" : "bg-gray-50"
+      }`}
+    >
+      {/* Header Section */}
+      <div className="relative h-64">
+        <div>
+          <div className="absolute top-4 left-4"></div>
 
-   /**
-    * Handles profile update
-    * @param {Event} e - Form submit event
-    */
-   const handleUpdate = async (e) => {
-      e.preventDefault();
-
-      // Validation
-      if (!form.userName.trim()) {
-         setMessage({ type: 'error', text: 'User name is required' });
-         return;
-      }
-
-      setLoadingStates(prev => ({ ...prev, updating: true }));
-      setMessage({ type: '', text: '' }); // Clear any existing messages
-
-      try {
-         const res = await axiosInstance.put('/auth/update-profile', form);
-         setUser(res.data.user);
-         setEditMode(false);
-         setMessage({ type: 'success', text: 'Profile updated successfully!' });
-      } catch (err) {
-         const errorMessage = err.response?.data?.msg || 'Failed to update profile. Please try again.';
-         setMessage({ type: 'error', text: errorMessage });
-      } finally {
-         setLoadingStates(prev => ({ ...prev, updating: false }));
-      }
-   };
-
-   /**
-    * Handles account deletion with confirmation
-    */
-   const handleDelete = async () => {
-      // Confirmation dialog
-      if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-         return;
-      }
-
-      setLoadingStates(prev => ({ ...prev, deleting: true }));
-      setMessage({ type: '', text: '' }); // Clear any existing messages
-
-      try {
-         await axiosInstance.delete('/auth/delete-account');
-
-         // Clear user data
-         setUser(null);
-         setToken(null);
-         setAuthToken(null);
-         localStorage.removeItem('token');
-         localStorage.removeItem('user');
-
-         setMessage({ type: 'success', text: 'Account deleted successfully. Redirecting...' });
-
-         // Small delay before navigation to show success message
-         setTimeout(() => {
-            navigate('/register');
-         }, 2000);
-
-      } catch (err) {
-         const errorMessage = err.response?.data?.msg || 'Failed to delete account. Please try again.';
-         setMessage({ type: 'error', text: errorMessage });
-      } finally {
-         setLoadingStates(prev => ({ ...prev, deleting: false }));
-      }
-   };
-   /**
-    * Handles user logout
-    */
-   const handleLogout = async () => {
-      setLoadingStates(prev => ({ ...prev, logout: true }));
-      setMessage({ type: '', text: '' }); // Clear any existing messages
-
-      try {
-         const res = await axiosInstance.post('/auth/logout');
-         if (res.status === 200) {
-            // Clear user data
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            setAuthToken(null);
-            setUser(null);
-            setToken(null);
-
-            setMessage({ type: 'success', text: 'Logged out successfully. Redirecting...' });
-
-            // Small delay before navigation to show success message
-            setTimeout(() => {
-               navigate('/login');
-            }, 1500);
-         }
-      } catch (error) {
-         const errorMessage = error.response?.data?.msg || 'Logout failed. Please try again.';
-         setMessage({ type: 'error', text: errorMessage });
-      } finally {
-         setLoadingStates(prev => ({ ...prev, logout: false }));
-      }
-   };
-
-   return (
-      <div>
-         <div className={`max-w-[500px] w-screen min-h-screen mx-auto p-4 flex flex-col items-center transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-900' : 'bg-neutral-200'}`}>
-
-            {/* Message Display */}
-            {message.text && (
-               <div className={`w-full mt-4 p-3 rounded-lg text-sm font-medium border transition-colors duration-200 ${message.type === 'success'
-                  ? theme === 'dark'
-                     ? 'bg-green-900 text-green-200 border-green-700'
-                     : 'bg-green-100 text-green-800 border-green-200'
-                  : theme === 'dark'
-                     ? 'bg-red-900 text-red-200 border-red-700'
-                     : 'bg-red-100 text-red-800 border-red-200'
-                  }`}>
-                  {message.text}
-               </div>
-            )}
-
-            {/* Profile Header Section */}
-            <div className={`rounded-xl shadow w-full flex justify-between items-center mt-8 p-4 transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-               <div className='flex items-center gap-4'>
-                  {/* Profile Avatar */}
-                  <div>
-                     <img
-                        src={defaultAvatar}
-                        alt='Profile'
-                        className='w-12 h-12 rounded-full object-cover'
-                     />
-                  </div>
-
-                  {/* Profile Basic Info */}
-                  <div className='flex flex-col gap-1'>
-                     <h1 className={`text-lg font-semibold transition-colors duration-200 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>{form.userName}</h1>
-                     <h5 className={`text-sm transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>{form.shopName}</h5>
-                  </div>
-               </div>
-
-               {/* Edit Profile Link */}
-               <Link
-                  to="/edit-user"
-                  className={`flex items-center gap-2 transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300 hover:text-blue-400' : 'text-gray-700 hover:text-blue-600'}`}
-               >
-                  <span>
-                     <FaRegEdit className='text-xs cursor-pointer' />
-                  </span>
-                  <span className='text-sm'>Edit</span>
-               </Link>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+            <div
+              className={`
+                w-24 h-24 rounded-2xl
+                flex items-center justify-center
+                text-3xl font-bold
+                ${
+                  theme === "dark"
+                    ? "bg-purple-500/20 text-purple-300"
+                    : "bg-purple-100 text-purple-600"
+                }
+              `}
+            >
+              {user?.name?.[0]?.toUpperCase() || "U"}
             </div>
-
-            {/* User Details Section */}
-            <div className={`rounded-xl shadow p-4 mt-4 w-full flex flex-col gap-4 overflow-hidden transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-               <div className='flex justify-between items-center'>
-                  <h3 className={`text-lg font-semibold transition-colors duration-200 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Your Details</h3>
-                  <Link
-                     to="/edit-user"
-                     className={`flex items-center gap-2 transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300 hover:text-blue-400' : 'text-gray-700 hover:text-blue-600'}`}
-                  >
-                     <span>
-                        <FaRegEdit className='text-xs cursor-pointer' />
-                     </span>
-                     <span className='text-sm'>Edit</span>
-                  </Link>
-               </div>
-
-               {/* User Information */}
-               <div className='flex flex-col text-sm gap-2'>
-                  <div className='flex justify-start gap-2'>
-                     <span className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Email:</span>
-                     <span className={`transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>{user?.email || '-'}</span>
-                  </div>
-                  <div className='flex justify-start gap-2'>
-                     <span className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Phone:</span>
-                     <span className={`transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>{user?.phone || '-'}</span>
-                  </div>
-                  <div className='flex justify-start gap-2'>
-                     <span className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Role:</span>
-                     <span className={`transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>{user?.role || '-'}</span>
-                  </div>
-               </div>
-            </div>
-
-            {/* Account Actions Section */}
-            <div className={`rounded-xl shadow p-4 mt-4 w-full flex flex-col gap-4 transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-               <h3 className={`text-lg font-semibold transition-colors duration-200 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Account Actions</h3>
-
-               {/* Delete Account Button */}
-               <button
-                  className={`px-4 py-2 rounded-lg shadow transition-all duration-200 flex items-center justify-center gap-2 ${loadingStates.deleting
-                     ? `cursor-not-allowed opacity-60 ${theme === 'dark' ? 'bg-gray-600 text-gray-300' : 'bg-gray-400 text-white'}`
-                     : 'bg-red-500 text-white hover:bg-red-600 cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2'
-                     } ${theme === 'dark' ? 'focus:ring-offset-gray-800' : 'focus:ring-offset-white'}`}
-                  onClick={handleDelete}
-                  disabled={loadingStates.deleting}
-               >
-                  {loadingStates.deleting && (
-                     <AiOutlineLoading3Quarters className='animate-spin' />
-                  )}
-                  <span>{loadingStates.deleting ? 'Deleting...' : 'Delete Account'}</span>
-               </button>
-
-               {/* Logout Button */}
-               <button
-                  onClick={handleLogout}
-                  disabled={loadingStates.logout}
-                  className={`px-4 py-2 rounded-lg shadow transition-all duration-200 flex items-center justify-center gap-2 ${loadingStates.logout
-                     ? `cursor-not-allowed opacity-60 ${theme === 'dark' ? 'bg-gray-600 text-gray-300' : 'bg-gray-400 text-white'}`
-                     : 'bg-blue-500 text-white hover:bg-blue-600 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
-                     } ${theme === 'dark' ? 'focus:ring-offset-gray-800' : 'focus:ring-offset-white'}`}
-               >
-                  {loadingStates.logout && (
-                     <AiOutlineLoading3Quarters className='animate-spin' />
-                  )}
-                  <span>{loadingStates.logout ? 'Logging out...' : 'Logout'}</span>
-               </button>
-            </div>
-         </div>
+          </div>
+        </div>
       </div>
-   );
+
+      {/* Content Section */}
+      <div className="px-4 -mt-6 mb-6">
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className={`
+            rounded-2xl p-6
+            ${theme === "dark" ? "bg-gray-800" : "bg-white"}
+            shadow-lg
+          `}
+        >
+          <div className="flex justify-between items-center mb-6">
+            <h1
+              className={`text-md font-medium ${
+                theme === "dark" ? "text-gray-100" : "text-gray-800"
+              }`}
+            >
+              {user?.name}
+            </h1>
+            <div className="flex gap-2">
+              <button
+                onClick={() => navigate("/edit-user")}
+                className={`
+                p-2 rounded-lg transition-all
+                ${
+                  theme === "dark"
+                    ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
+                    : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                }
+              `}
+              >
+                <CiEdit size={15} />
+              </button>
+              <button
+                className={`
+                            p-2 rounded-lg transition-all
+                            ${
+                              theme === "dark"
+                                ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
+                                : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                            }`}
+              >
+                <IoCameraOutline size={15} />
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {/* Shop Details Card */}
+            <div
+              className={`
+                p-4 rounded-xl
+                ${theme === "dark" ? "bg-gray-700/50" : "bg-purple-50"}
+              `}
+            >
+              <p
+                className={`text-xs ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                Shop Name
+              </p>
+              <p
+                className={`text-sm font-bold ${
+                  theme === "dark" ? "text-purple-400" : "text-purple-600"
+                }`}
+              >
+                {user?.shopName || "Not Set"}
+              </p>
+            </div>
+
+            {/* User Details Grid */}
+            <div className="flex flex-wrap overflow-hidden gap-4">
+              {[
+                { label: "Email", value: user?.email },
+                { label: "Phone", value: user?.phone },
+                { label: "Role", value: user?.role },
+                {
+                  label: "Joined",
+                  value: new Date(user?.createdAt).toLocaleDateString(),
+                },
+              ].map((item, index) => (
+                <div
+                  key={index}
+                  className={`
+                    p-4 rounded-xl
+                    ${theme === "dark" ? "bg-gray-700/50" : "bg-gray-50"}
+                  `}
+                >
+                  <p
+                    className={`text-xs ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
+                    {item.label}
+                  </p>
+                  <p
+                    className={`text-sm font-medium ${
+                      theme === "dark" ? "text-gray-200" : "text-gray-800"
+                    }`}
+                  >
+                    {item.value || "N/A"}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-8 flex flex-col gap-2">
+              <button
+                onClick={handleLogout}
+                disabled={loadingStates.logout}
+                className={`
+                  py-3 px-4 rounded-xl
+                  flex items-center justify-center gap-2
+                  font-medium text-sm
+                  transition-all duration-200
+                  ${
+                    theme === "dark"
+                      ? "bg-purple-500/20 text-purple-400 hover:bg-purple-500/30"
+                      : "bg-purple-100 text-purple-600 hover:bg-purple-200"
+                  }
+                `}
+              >
+                {loadingStates.logout ? (
+                  <AiOutlineLoading3Quarters className="animate-spin" />
+                ) : (
+                  <FiLogOut />
+                )}
+                <span>
+                  {loadingStates.logout ? "Logging out..." : "Logout"}
+                </span>
+              </button>
+
+              <button
+                onClick={handleDelete}
+                disabled={loadingStates.deleting}
+                className={`
+                  py-3 px-4 rounded-xl
+                  flex items-center justify-center gap-2
+                  font-medium text-sm
+                  transition-all duration-200
+                  ${
+                    theme === "dark"
+                      ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                      : "bg-red-100 text-red-600 hover:bg-red-200"
+                  }
+                  ${loadingStates.deleting && "opacity-50 cursor-not-allowed"}
+                `}
+              >
+                {loadingStates.deleting ? (
+                  <AiOutlineLoading3Quarters className="animate-spin" />
+                ) : (
+                  <FiTrash2 />
+                )}
+                <span>
+                  {loadingStates.deleting ? "Deleting..." : "Delete Account"}
+                </span>
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Message Toast */}
+      {message.text && (
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 50 }}
+          className={`
+            fixed bottom-4 left-4 right-4
+            p-4 rounded-lg shadow-lg
+            ${
+              message.type === "success"
+                ? theme === "dark"
+                  ? "bg-green-900/90 text-green-200"
+                  : "bg-green-500 text-white"
+                : theme === "dark"
+                ? "bg-red-900/90 text-red-200"
+                : "bg-red-500 text-white"
+            }
+          `}
+        >
+          {message.text}
+        </motion.div>
+      )}
+    </motion.div>
+  );
 }
 
-export default UserProfile
+export default UserProfile;

@@ -1,247 +1,358 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
-import { IoSettingsOutline } from "react-icons/io5";
-import { GiPlagueDoctorProfile } from "react-icons/gi";
-import { Link } from 'react-router-dom';
-import { GiShamrock } from "react-icons/gi";
-import StatsTable from '../components/StatsTable';
-import axiosInstance from '../api/axiosInstance';
-import { statsContext } from '../context/Stats';
-import { HiOutlineDocumentReport, HiOutlineUserGroup } from "react-icons/hi";
-import { MdAddShoppingCart } from "react-icons/md";
-import { GiWineBottle } from "react-icons/gi";
-import { AiOutlineLoading3Quarters } from 'react-icons/ai';
-import SideNave from '../components/SideNave';
-import { useTheme } from '../context/ThemeContext';
+import React, { useContext, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import axiosInstance from "../api/axiosInstance";
+import { ProductContext } from "../context/ProductContext";
+import { SupplierContext } from "../context/SupplierContext";
+import { useTheme } from "../context/ThemeContext";
+import createOrder from "../assets/create-order.png";
+import productsPNG from "../assets/products.png";
+import stockReport from "../assets/stock-report.png";
+import supplierPNG from "../assets/suppliers.png";
+import bg from "../assets/bg.png";
+import products2 from "../assets/products2.png";
+import suppliers2 from "../assets/suppliers2.png";
+import { motion } from "framer-motion";
 
-
-
-/**
- * Dashboard component - Main dashboard displaying statistics and overview
- * Shows user information, statistics tables, and provides navigation
- */
 const Dashboard = () => {
   // Navigation and context hooks
-  const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
   const { theme } = useTheme();
-
-  // Stats context hooks
-  const { stats, setStats } = useContext(statsContext);
-  const { topSuppliers, setTopSuppliers } = useContext(statsContext);
-  const { topProducts, setTopProducts } = useContext(statsContext);
-  const { recentOrders, setRecentOrders } = useContext(statsContext);
-
-  // UI state for side navigation
-  const [isClosed, setIsClosed] = useState(false);
+  const { suppliers, setSuppliers } = useContext(SupplierContext);
+  const { products, setProducts } = useContext(ProductContext);
+  const [scrollPosition, setScrollPosition] = useState(0);
 
   // Loading states for different data sections
   const [loadingStates, setLoadingStates] = useState({
     stats: true,
     topSuppliers: true,
     topProducts: true,
-    recentOrders: true
+    recentOrders: true,
   });
 
   // Message state for success/error feedback
-  const [message, setMessage] = useState({ type: '', text: '' });
+  const [message, setMessage] = useState({ type: "", text: "" });
 
   // Clear messages after 5 seconds
   useEffect(() => {
     if (message.text) {
       const timer = setTimeout(() => {
-        setMessage({ type: '', text: '' });
+        setMessage({ type: "", text: "" });
       }, 5000);
       return () => clearTimeout(timer);
     }
   }, [message]);
 
-  // Fetch monthly statistics
+  // Scroll event listener to track scroll position
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setLoadingStates(prev => ({ ...prev, stats: true }));
-        const res = await axiosInstance.get('/order/stats/monthly');
-        setStats(Array.isArray(res.data) ? res.data : [res.data]);
-      } catch (error) {
-        setMessage({ type: 'error', text: 'Failed to fetch monthly statistics' });
-      } finally {
-        setLoadingStates(prev => ({ ...prev, stats: false }));
-      }
+    const onScroll = () => {
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      setScrollPosition(scrollTop);
     };
 
-    fetchStats();
-  }, [setStats]);
-
-  // Fetch top suppliers data
+    window.addEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [setScrollPosition]);
+  // Fetch suppliers on component mount
   useEffect(() => {
-    const fetchTopSuppliers = async () => {
+    const fetchSuppliers = async () => {
       try {
-        setLoadingStates(prev => ({ ...prev, topSuppliers: true }));
-        const res = await axiosInstance.get('/order/stats/top-suppliers');
-        setTopSuppliers(Array.isArray(res.data) ? res.data : []);
+        const res = await axiosInstance.get("/supplier");
+        if (res.status !== 200) {
+          throw new Error("Failed to fetch suppliers");
+        }
+        const data = res.data;
+        setSuppliers(data);
       } catch (error) {
-        setMessage({ type: 'error', text: 'Failed to fetch top suppliers data' });
-      } finally {
-        setLoadingStates(prev => ({ ...prev, topSuppliers: false }));
+        setMessage({
+          type: "error",
+          text: "Error fetching suppliers. Please refresh the page.",
+        });
       }
     };
+    fetchSuppliers();
+  }, [setSuppliers]);
 
-    fetchTopSuppliers();
-  }, [setTopSuppliers]);
-
-  // Fetch top products data
+  // Fetch products on component mount
   useEffect(() => {
-    const fetchTopProducts = async () => {
+    const fetchProducts = async () => {
       try {
-        setLoadingStates(prev => ({ ...prev, topProducts: true }));
-        const res = await axiosInstance.get('/order/stats/top-products');
-        setTopProducts(res.data);
+        const res = await axiosInstance.get("/product");
+        if (res.status !== 200) {
+          throw new Error("Failed to fetch products");
+        }
+        const data = res.data;
+        setProducts(data);
       } catch (error) {
-        setMessage({ type: 'error', text: 'Failed to fetch top products data' });
-      } finally {
-        setLoadingStates(prev => ({ ...prev, topProducts: false }));
+        setMessage({
+          type: "error",
+          text: "Error fetching products. Please try again.",
+        });
       }
     };
-
-    fetchTopProducts();
-  }, [setTopProducts]);
-
-  // Fetch recent orders data
-  useEffect(() => {
-    const fetchRecentOrders = async () => {
-      try {
-        setLoadingStates(prev => ({ ...prev, recentOrders: true }));
-        const res = await axiosInstance.get('/order/stats/recent-orders');
-        setRecentOrders(res.data);
-      } catch (error) {
-        setMessage({ type: 'error', text: 'Failed to fetch recent orders data' });
-      } finally {
-        setLoadingStates(prev => ({ ...prev, recentOrders: false }));
-      }
-    };
-
-    fetchRecentOrders();
-  }, [setRecentOrders]);
-
-
-  /**
-   * Handles opening the side navigation
-   */
-  const handleOpenSideNav = () => {
-    setIsClosed(true);
-  };
-
-  /**
-   * Handles closing the side navigation
-   */
-  const handleCloseSideNav = () => {
-    setIsClosed(false);
-  };
+    fetchProducts();
+  }, [setProducts]);
 
   return (
-    <div className={`w-full max-w-[500px] min-h-dvh relative transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}>
-      {/* Side Navigation Component */}
-      <SideNave isClosed={isClosed} onClose={handleCloseSideNav} />
-
-      <div className={`max-w-[500px] w-screen mx-auto relative transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-900' : ''}`}>
-
-        {/* Header Section */}
-        <div className='w-full flex justify-between items-center p-4'>
-          <div className='opacity-70'>
-            <p className={`monoton-regular text-5xl absolute top-2 left-2 transition-colors duration-200 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>hey</p>
-            <p className={`monoton-regular text-5xl absolute top-14 left-2 transition-colors duration-200 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>{user?.name || 'User Name'}</p>
-          </div>
-
-          {/* Settings Icon - Opens Side Navigation */}
-          <button
-            onClick={handleOpenSideNav}
-            className={`w-8 h-8 rounded-full flex justify-center items-center z-[8] transition-colors duration-200 ${theme === 'dark'
-              ? 'bg-gray-800 hover:bg-gray-700 text-gray-200'
-              : 'bg-white hover:bg-gray-100 text-gray-800'
-              }`}
-            aria-label="Open settings menu"
+    <motion.div
+      className={`w-full min-h-screen transition-colors duration-200 ${
+        theme === "dark" ? "bg-gray-800" : "bg-white"
+      }`}
+    >
+      <div
+        className={`max-w-[500px] w-full flex items-center justify-start p-4 fixed top-0 z-[60]  ${
+          scrollPosition >= 135
+            ? `shadow-md transition-all duration-300 ${
+                theme === "dark" ? "bg-gray-900" : "bg-white"
+              }`
+            : ""
+        }`}
+      >
+        <Link to={"/profile"} className="w-full flex items-center ">
+          <img
+            className={`h-6 w-6 rounded-full  ${theme === "dark" ? "bg-gray-800" : "bg-gray-200"}`}
+            src="https://avatar.iran.liara.run/public"
+            alt=""
+          />
+        </Link>
+      </div>
+      <div className={`h-48 w-full relative overflow-hidden bg-[#5e2b9d] `}>
+        <img
+          className="absolute inset-0 w-52 top-2 opacity-50  left-1/2 translate-x-[-50%] object-cover"
+          src={bg}
+          alt="Background"
+        />
+      </div>
+      <div
+        className={`min-h-screen h-full flex flex-col gap-2 w-full p-4 pb-32 ${
+          theme === "dark" ? "bg-gray-900" : "bg-white"
+        }`}
+      >
+        <div className="w-full flex items-center justify-between gap-2">
+          <Link
+            to={"/create-product"}
+            className={`w-full flex flex-col gap-2 p-2 items-center justify-center text-center rounded-lg scale-90 ${
+              theme === "dark" ? "bg-gray-800" : "text-gray-900 bg-gray-200"
+            }`}
           >
-            <IoSettingsOutline className='text-2xl' />
-          </button>
+            <span
+              className={`relative text-3xl w-12 h-12 rounded-full overflow-hidden ${
+                theme === "dark" ? "bg-gray-900" : "bg-white"
+              }`}
+            >
+              <span className="absolute -bottom-2.5 left-2 w-8 flex items-center justify-center">
+                <img src={products2} alt="" />
+              </span>
+            </span>
+            <p className="libre-franklin-regular text-[8px] font-mono font-medium tracking-normal">
+              Add New Product
+            </p>
+          </Link>
+          <Link
+            to={"/create-supplier"}
+            className={`w-full flex flex-col gap-2 p-2 items-center justify-center text-center rounded-lg scale-90 ${
+              theme === "dark" ? "bg-gray-800" : "text-gray-900 bg-gray-200"
+            }`}
+          >
+            <span
+              className={`relative text-3xl w-12 h-12 rounded-full overflow-hidden ${
+                theme === "dark" ? "bg-gray-900" : "bg-white"
+              }`}
+            >
+              <span className="absolute -bottom-2.5 -left-1 w-16 flex items-center justify-center">
+                <img src={suppliers2} alt="" />
+              </span>
+            </span>
+            <p className="libre-franklin-regular text-[8px] font-mono font-medium tracking-normal">
+              Add New Supplier
+            </p>
+          </Link>
+          <Link
+            to={"/create-order"}
+            className={`w-full flex flex-col gap-2 p-2 items-center justify-center text-center rounded-lg scale-90 ${
+              theme === "dark" ? "bg-gray-800" : "text-gray-900 bg-gray-200"
+            }`}
+          >
+            <span
+              className={`relative text-3xl w-12 h-12 rounded-full overflow-hidden ${
+                theme === "dark" ? "bg-gray-900" : "bg-white"
+              }`}
+            >
+              <span className="absolute -bottom-2 -left-0.5 w-12 flex items-center justify-center">
+                <img src={createOrder} alt="" />
+              </span>
+            </span>
+            <p className="media libre-franklin-regular text-[8px]  font-medium tracking-normal">
+              Create Order List
+            </p>
+          </Link>
+          <Link
+            to={"/create-stock-report"}
+            className={`w-full flex flex-col gap-2 p-2 items-center justify-center text-center rounded-lg scale-90 ${
+              theme === "dark" ? "bg-gray-800" : "text-gray-900 bg-gray-200"
+            }`}
+          >
+            <span
+              className={`relative text-3xl w-12 h-12 rounded-full overflow-hidden ${
+                theme === "dark" ? "bg-gray-900" : "bg-white"
+              }`}
+            >
+              <span className="absolute -bottom-1 left-0.5 w-12 flex items-center justify-center ">
+                <img src={stockReport} alt="" />
+              </span>
+            </span>
+            <p className="libre-franklin-regular text-[8px] font-mono font-medium tracking-normal">
+              Create Stock Report
+            </p>
+          </Link>
         </div>
-
-        {/* Main Content Area */}
-        <div className={`w-full h-full min-h-screen relative z-10 rounded-t-3xl shadow-xl p-6 mt-10 padding-bottom-custom  border-t-2 flex flex-col gap-4 transition-colors duration-200 ${theme === 'dark'
-          ? 'bg-gray-800 shadow-gray-900 border-gray-600'
-          : 'bg-zinc-200 shadow-zinc-900 border-zinc-900'
-          }`}>
-
-          {/* Message Display */}
-          {message.text && (
-            <div className={`p-3 rounded-lg text-sm font-medium mb-4 border transition-colors duration-200 ${message.type === 'success'
-              ? theme === 'dark'
-                ? 'bg-green-900 text-green-200 border-green-700'
-                : 'bg-green-100 text-green-800 border-green-200'
-              : theme === 'dark'
-                ? 'bg-red-900 text-red-200 border-red-700'
-                : 'bg-red-100 text-red-800 border-red-200'
-              }`}>
-              {message.text}
+        <div
+          className={`w-full h-16 flex items-center justify-between gap-3 rounded-md p-2 ${
+            theme === "dark" ? "text-gray-100" : "text-gray-900"
+          }`}
+        >
+          <Link
+            className={`w-full h-full flex items-center justify-center text-center rounded-lg relative overflow-hidden ${
+              theme === "dark" ? "bg-gray-800" : "bg-gray-200"
+            }`}
+            to={"/products"}
+          >
+            <div className="w-full h-full flex flex-col p-2 z-50">
+              <p className="libre-franklin-regular text-md text-start">
+                Products ({products.length})
+              </p>
+              <p className=" text-start libre-franklin-regular text-[8px]">
+                In Inventory
+              </p>
             </div>
-          )}
-
-          {/* Page Title */}
-          {/* <div className='mb-16'> */}
-          <h1 className={`font-semibold text-lg text-center mb-4 transition-colors duration-200 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>Statistics Overview</h1>
-
-          {/* Statistics Tables */}
-          <StatsTable
-            title='Monthly Statistics'
-            columns={[
-              { label: 'Orders', key: 'totalOrders' },
-              { label: 'Weight (kg)', key: 'totalWeight' },
-              { label: 'Amount (₹)', key: 'totalAmount' }
-            ]}
-            data={stats}
-            loading={loadingStates.stats}
-          />
-          <StatsTable
-            title="Recent Orders"
-            columns={[
-              { label: 'Supplier', key: 'supplier' },
-              { label: 'Date', key: 'createdAt' },
-              { label: 'Amount (₹)', key: 'totalAmount' }
-            ]}
-            data={recentOrders}
-            loading={loadingStates.recentOrders}
-          />
-          <StatsTable
-            title="Top Products"
-            columns={[
-              { label: 'Product', key: 'name' },
-              { label: 'Type', key: 'type' },
-              { label: 'Quantity', key: 'totalQuantity' }
-            ]}
-            data={topProducts}
-            loading={loadingStates.topProducts}
-          />
-          <StatsTable
-            title="Top Suppliers"
-            columns={[
-              { label: 'Name', key: 'name' },
-              { label: 'Contact', key: 'contact' },
-              { label: 'Amount (₹)', key: 'totalPurchase' }
-            ]}
-            data={topSuppliers}
-            loading={loadingStates.topSuppliers}
-          />
-
-          
-
-          
-
-          {/* </div> */}
-
+            <span className="absolute -bottom-2 -right-4 w-20 flex items-center justify-center opacity-50">
+              <img src={productsPNG} alt="" />
+            </span>
+          </Link>
+          <Link
+            className={`w-full h-full flex items-center justify-center text-center rounded-lg relative overflow-hidden ${
+              theme === "dark" ? "bg-gray-800" : "bg-gray-200"
+            }`}
+            to={"/suppliers"}
+          >
+            <div className="w-full h-full flex flex-col p-2 z-50">
+              <p className="libre-franklin-regular text-md text-start">
+                Suppliers ({suppliers.length})
+              </p>
+              <p className=" text-start libre-franklin-regular text-[8px]">
+                In Total
+              </p>
+            </div>
+            <span className="absolute -bottom-1 -right-3 w-24 flex items-center justify-center opacity-50">
+              <img src={supplierPNG} alt="" />
+            </span>
+          </Link>
+        </div>
+        <div
+          className={`w-full h-[1px] mb-2 ${
+            theme === "dark" ? "bg-gray-800" : "bg-gray-200"
+          }`}
+        ></div>
+        <div
+          className={`w-full p-2 rounded-md text-xs  ${
+            theme === "dark"
+              ? "bg-gray-800 text-gray-100"
+              : "bg-gray-200 text-gray-800"
+          }`}
+        >
+          <p>About OrderSathi</p>
+        </div>
+        <div
+          className={`text-xs p-2 w-full flex items-center justify-between gap-3 rounded-md ${
+            theme === "dark"
+              ? "bg-gray-800 text-gray-100"
+              : "bg-gray-200 text-gray-800"
+          }`}
+        >
+          <p>
+            <b className="">OrderSathi</b> is a fast, simple, and free order &
+            stock management app for shopkeepers, suppliers, and small
+            businesses.
+          </p>
+        </div>
+        <div
+          className={`text-xs p-2 w-full flex items-center justify-between gap-3 rounded-md ${
+            theme === "dark"
+              ? "bg-gray-800 text-gray-100"
+              : "bg-gray-200 text-gray-800"
+          }`}
+        >
+          <ul>
+            <p>🎯 Why Use It?</p>
+            <li>• Easy order creation & management</li>
+            <li>• No more manual paperwork or errors</li>
+            <li>• Generate professional PDF reports instantly</li>
+            <li>• Access your data anytime, anywhere</li>
+          </ul>
+        </div>
+        <div
+          className={`text-xs p-2 w-full flex items-center justify-between gap-3 rounded-md ${
+            theme === "dark"
+              ? "bg-gray-800 text-gray-100"
+              : "bg-gray-200 text-gray-800"
+          }`}
+        >
+          <ul>
+            <p>📋 What You Can Do</p>
+            <li>• Create and manage product orders</li>
+            <li>• Track suppliers & products</li>
+            <li>• Download order/stock reports as PDFs</li>
+            <li>• Keep a digital record of your business</li>
+          </ul>
+        </div>
+        <div
+          className={`text-xs p-2 w-full flex items-center justify-between gap-3 rounded-md ${
+            theme === "dark"
+              ? "bg-gray-800 text-gray-100"
+              : "bg-gray-200 text-gray-800"
+          }`}
+        >
+          <ul>
+            <p>💡 Tips for Best Use</p>
+            <li>• Keep supplier/product lists updated</li>
+            <li>• Use PDFs to share orders or reports</li>
+            <li>• Update stock regularly for accuracy</li>
+            <li>• Use on mobile or desktop</li>
+          </ul>
+        </div>
+        <div
+          className={`text-xs p-2 w-full flex items-center justify-between gap-3 rounded-md ${
+            theme === "dark"
+              ? "bg-gray-800 text-gray-100"
+              : "bg-gray-200 text-gray-800"
+          }`}
+        >
+          <ul>
+            <p>⚙️ How It Works</p>
+            <li>• Sign up & log in</li>
+            <li>• Add suppliers & products</li>
+            <li>• Create your order list</li>
+            <li>• Download/share PDFs</li>
+            <li>• Track stock & view reports</li>
+          </ul>
+        </div>
+        <div
+          className={`text-xs p-2 w-full flex items-center justify-between gap-3 rounded-md ${
+            theme === "dark"
+              ? "bg-gray-800 text-gray-100"
+              : "bg-gray-200 text-gray-800"
+          }`}
+        >
+          <ul>
+            <p>💰 100% Free</p>
+            <li>
+              No charges, subscriptions, or hidden fees. Built to support small
+              businesses.
+            </li>
+          </ul>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

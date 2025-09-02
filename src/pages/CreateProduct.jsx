@@ -1,50 +1,44 @@
 import React, { useContext, useEffect, useState } from "react";
-import { useNavigate, useParams, Link } from "react-router-dom";
-import axiosInstance from "../api/axiosInstance";
-import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { useTheme } from "../context/ThemeContext";
-
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { SupplierContext } from "../context/SupplierContext";
-import { IoArrowUndoOutline, IoChevronDownOutline } from "react-icons/io5";
-import { MdOutlineSave } from "react-icons/md";
+import { BiSolidAddToQueue } from "react-icons/bi";
 import { BiError } from "react-icons/bi";
+import { GrStatusGood } from "react-icons/gr";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { SupplierContext } from "../context/SupplierContext";
+import axiosInstance from "../api/axiosInstance";
 import Popup from "../components/Popup";
+import { IoChevronDownOutline } from "react-icons/io5";
+import { MdOutlineSave } from "react-icons/md";
+import { IoArrowUndoOutline } from "react-icons/io5";
 
-/**
- * EditProduct Component
- * Handles product editing functionality with form validation and loading states
- * @returns {JSX.Element} EditProduct component
- */
-function EditProduct() {
-  const { id } = useParams();
-  const navigate = useNavigate();
+function CreateProduct() {
   const { theme } = useTheme();
+  const navigate = useNavigate();
   const { suppliers, setSuppliers } = useContext(SupplierContext);
+  
+  const [form, setForm] = useState({
+    name: "",
+    weight: "",
+    rate: "",
+    mrp: "",
+    type: "Piece",
+    supplierId: "",
+  });
+
+  const [state, setState] = useState({
+    isLoading: false,
+    newProductId: null,
+    message: { type: "", text: "" },
+  });
 
   const [isSupplierDropdownOpen, setIsSupplierDropdownOpen] = useState(false);
   const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
 
-  // Form state management
-  const [form, setForm] = useState({
-    name: "",
-    type: "",
-    mrp: "",
-    rate: "",
-    weight: "",
-    supplierId: "",
-  });
+  const { isLoading, message, newProductId } = state;
 
-  // Loading states for different operations
-  const [loadingStates, setLoadingStates] = useState({
-    updating: false,
-  });
-
-  // Message state for user feedback
-  const [message, setMessage] = useState({
-    text: "",
-    type: "", // 'success', 'error', 'info'
-  });
+  // Define product types array
   const productTypes = [
     "Piece",
     "Bag",
@@ -56,47 +50,61 @@ function EditProduct() {
     "Patta",
     "Dozen",
   ];
-  /**
-   * Display message to user with auto-hide functionality
-   * @param {string} text - Message text
-   * @param {string} type - Message type (success/error/info)
-   */
 
-  /**
-   * Fetch product data on component mount
-   */
-  useEffect(() => {
-    const fetchProduct = async () => {
-      if (!id) {
-        setMessage("Invalid product ID", "error");
-        navigate(`/product-profile/${id}`);
-        return;
-      }
+  // Handle form updates
+  const updateForm = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
 
-      try {
-        const response = await axiosInstance.get(`/product/single/${id}`);
-        const productData = response.data;
+  // Handle state updates
+  const updateState = (updates) => {
+    setState((prev) => ({ ...prev, ...updates }));
+  };
 
-        setForm({
-          name: productData.name || "",
-          type: productData.type || "",
-          mrp: productData.mrp || "",
-          rate: productData.rate || "",
-          weight: productData.weight || "",
-          supplierId: productData.supplierId?._id || "",
-        });
-      } catch (error) {
-        const errorMessage =
-          error.response?.data?.msg ||
-          error.response?.data?.message ||
-          "Failed to load product data";
-        setMessage({ text: errorMessage, type: "error" });
-        navigate(`/product-profile/${id}`);
-      }
-    };
+  const handleAdd = async () => {
+    const { name, rate, supplierId, weight, mrp, type } = form;
 
-    fetchProduct();
-  }, [id]);
+    if (
+      !name.trim() ||
+      !rate ||
+      !weight.trim() ||
+      !mrp ||
+      !type.trim() ||
+      !supplierId
+    ) {
+      updateState({
+        message: { type: "error", text: "Please fill all fields" },
+      });
+      return;
+    }
+
+    updateState({ isLoading: true, message: { type: "", text: "" } });
+
+    try {
+      const response = await axiosInstance.post(`/product/add/${supplierId}`, {
+        name: name.trim(),
+        rate,
+        weight: weight.trim(),
+        mrp,
+        type: type.trim(),
+      });
+      console.log(response.data);
+      updateState({
+        message: { type: "success", text: "Product added successfully!" },
+        newProductId: response.data.product._id,
+      });
+    } catch (error) {
+      updateState({
+        message: {
+          type: "error",
+          text: error.response?.data?.msg || "Failed to add product",
+        },
+      });
+    } finally {
+      updateState({ isLoading: false });
+    }
+  };
+
   useEffect(() => {
     const fetchSuppliers = async () => {
       try {
@@ -120,65 +128,18 @@ function EditProduct() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isSupplierDropdownOpen]);
-  /**
-   * Validate form data before submission
-   * @returns {boolean} - Returns true if form is valid
-   */
-  const validateForm = () => {
-    if (!form.name?.trim()) {
-      setMessage({ text: "Product name is required", type: "error" });
-      return false;
-    }
-    if (!form.type?.trim()) {
-      setMessage({ text: "Product type is required", type: "error" });
-      return false;
-    }
-    if (!form.mrp || parseFloat(form.mrp) <= 0) {
-      setMessage({ text: "Valid MRP is required", type: "error" });
-      return false;
-    }
-    if (!form.rate || parseFloat(form.rate) <= 0) {
-      setMessage({ text: "Valid rate is required", type: "error" });
-      return false;
-    }
-    if (parseFloat(form.rate) > parseFloat(form.mrp)) {
-      setMessage({ text: "Rate cannot be higher than MRP", type: "error" });
-      return false;
-    }
-    if (!form.weight?.trim()) {
-      setMessage({ text: "Product weight is required", type: "error" });
-      return false;
-    }
-    return true;
-  };
 
-  /**
-   * Handle product update submission
-   * @param {Event} e - Form submit event
-   */
-  const handleUpdate = async (e) => {
-    e.preventDefault();
+  // Add this useEffect to handle clicking outside for type dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isTypeDropdownOpen) {
+        setIsTypeDropdownOpen(false);
+      }
+    };
 
-    // Validate form before submission
-    if (!validateForm()) {
-      return;
-    }
-
-    setLoadingStates((prev) => ({ ...prev, updating: true }));
-
-    try {
-      await axiosInstance.put(`/product/single/${id}`, form);
-      navigate(`/product-profile/${id}`);
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.msg ||
-        err.response?.data?.message ||
-        "Failed to update product. Please try again.";
-      setMessage({ text: errorMessage, type: "error" });
-    } finally {
-      setLoadingStates((prev) => ({ ...prev, updating: false }));
-    }
-  };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isTypeDropdownOpen]);
 
   return (
     <motion.div
@@ -205,8 +166,8 @@ function EditProduct() {
          `}
       >
         <li>
-          Update the fields below and click 'Update' to securely save your
-          changes.
+          To add new Products fill out the form below and click on the "save"
+          button. It will automatically added on your items port.
         </li>
       </div>
       <div
@@ -222,8 +183,8 @@ function EditProduct() {
          `}
       >
         <li>
-          Please complete all required fields (those without the 'Optional' tag)
-          to proceed.
+          All the section who don't have the optional tag is mandatory to fill
+          out or the form section can't work.
         </li>
       </div>
       {/* Form Container */}
@@ -254,7 +215,7 @@ function EditProduct() {
               type="text"
               value={form.name}
               placeholder="e.g. Nivea Men Facewash 200ml"
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              onChange={(e) => updateForm("name", e.target.value)}
               className={`
                         w-full p-3 rounded-lg text-xs
                         outline-none transition-colors duration-200
@@ -379,7 +340,7 @@ function EditProduct() {
               <input
                 type="number"
                 value={form.mrp}
-                onChange={(e) => setForm({ ...form, mrp: e.target.value })}
+                onChange={(e) => updateForm("mrp", e.target.value)}
                 placeholder="200"
                 className={`
                            w-full p-3 rounded-lg text-xs
@@ -403,7 +364,7 @@ function EditProduct() {
               <input
                 type="number"
                 value={form.rate}
-                onChange={(e) => setForm({ ...form, rate: e.target.value })}
+                onChange={(e) => updateForm("rate", e.target.value)}
                 placeholder="150"
                 className={`
                            w-full p-3 rounded-lg text-xs
@@ -439,7 +400,7 @@ function EditProduct() {
                   type="number"
                   value={form.weight}
                   onChange={(e) => {
-                    setForm({ ...form, weight: e.target.value });
+                    updateForm("weight", e.target.value);
                   }}
                   placeholder="0.5"
                   className={`
@@ -525,7 +486,7 @@ function EditProduct() {
                       <motion.div
                         key={type}
                         onClick={() => {
-                          setForm({ ...form, type });
+                          updateForm("type", type);
                           setIsTypeDropdownOpen(false);
                         }}
                         whileHover={{
@@ -560,15 +521,16 @@ function EditProduct() {
               theme === "dark" ? "text-gray-400" : "text-gray-800"
             } text-[10px]`}
           >
-            Use the 'Type' field to indicate units like pcs (pieces), bag, cs
-            (case), or box.
+            Type is defined for the attributes like pcs (pieces), bag, cs
+            (case), box etc.
           </li>
           <li
             className={`${
               theme === "dark" ? "text-gray-400" : "text-gray-800"
             } text-[10px]`}
           >
-            Weight must be provided in kilograms (kg). Example: 750g = 0.75.
+            Weight should be in kgs. If product's weight is 750g then write
+            "0.75" only.
           </li>
         </div>
 
@@ -581,16 +543,7 @@ function EditProduct() {
           flex items-center gap-2 z-50 
           transition-all duration-500
           backdrop-blur-sm shadow-inner
-          ${
-            form.mrp &&
-            form.rate &&
-            form.weight &&
-            form.name &&
-            form.supplierId &&
-            form.type
-              ? " bottom-2"
-              : "-bottom-32"
-          }  ${
+          ${form.mrp && form.rate && form.weight && form.name && form.supplierId && form.type ? " bottom-2" : "-bottom-32"}  ${
             theme === "dark"
               ? "bg-gray-800/90 border-gray-700"
               : "bg-gray-100 border border-gray-200"
@@ -617,8 +570,8 @@ function EditProduct() {
           </button>
 
           <button
-            onClick={handleUpdate}
-            disabled={loadingStates.updating}
+            onClick={handleAdd}
+            disabled={isLoading}
             className={`
       w-full p-3 rounded-lg
       flex items-center justify-center gap-2
@@ -629,7 +582,7 @@ function EditProduct() {
       disabled:cursor-not-allowed 
       disabled:hover:scale-100
       ${
-        loadingStates.updating
+        isLoading
           ? theme === "dark"
             ? "bg-gray-700 text-gray-500"
             : "bg-gray-100 text-gray-400"
@@ -639,12 +592,12 @@ function EditProduct() {
       }
     `}
           >
-            {loadingStates.updating ? (
+            {isLoading ? (
               <AiOutlineLoading3Quarters className="animate-spin text-base" />
             ) : (
               <>
                 <MdOutlineSave className="text-base" />
-                <span>Update</span>
+                <span>Save</span>
               </>
             )}
           </button>
@@ -667,19 +620,41 @@ function EditProduct() {
               className={`
                      w-12 h-12 rounded-full
                      flex items-center justify-center
-                     ${theme === "dark" ? "bg-red-500/10" : "bg-red-50"}
+                     ${
+                       message.type === "success"
+                         ? theme === "dark"
+                           ? "bg-green-500/10"
+                           : "bg-green-50"
+                         : theme === "dark"
+                         ? "bg-red-500/10"
+                         : "bg-red-50"
+                     }
                   `}
             >
-              <BiError
-                className={`text-2xl ${
-                  theme === "dark" ? "text-red-400" : "text-red-500"
-                }`}
-              />
+              {message.type === "success" ? (
+                <GrStatusGood
+                  className={`text-2xl ${
+                    theme === "dark" ? "text-green-400" : "text-green-500"
+                  }`}
+                />
+              ) : (
+                <BiError
+                  className={`text-2xl ${
+                    theme === "dark" ? "text-red-400" : "text-red-500"
+                  }`}
+                />
+              )}
             </div>
 
             <p
               className={`text-center text-xs ${
-                theme === "dark" ? "text-red-400" : "text-red-600"
+                message.type === "success"
+                  ? theme === "dark"
+                    ? "text-green-400"
+                    : "text-green-600"
+                  : theme === "dark"
+                  ? "text-red-400"
+                  : "text-red-600"
               }`}
             >
               {message.text}
@@ -687,7 +662,7 @@ function EditProduct() {
 
             <div className="flex gap-3 w-full">
               <button
-                onClick={() => setMessage({ type: "", text: "" })}
+                onClick={() => updateState({ message: { type: "", text: "" } })}
                 className={`
                            flex-1 py-2.5 rounded-md
                            text-[10px] font-medium
@@ -695,7 +670,11 @@ function EditProduct() {
                            hover:scale-[0.98] active:scale-[0.97]
       
       ${
-        theme === "dark"
+        message.type === "success"
+          ? theme === "dark"
+            ? "text-green-400 bg-green-500/20"
+            : "text-green-600 bg-green-500/20"
+          : theme === "dark"
           ? "text-red-400 bg-red-500/10"
           : "text-red-600 bg-red-500/10"
       }
@@ -704,6 +683,23 @@ function EditProduct() {
               >
                 Close
               </button>
+              {message.type === "success" && (
+                <button
+                  onClick={() => navigate(`/product-profile/${newProductId}`)}
+                  className={`
+                           flex-1 py-2.5 rounded-md
+                           text-[10px] font-medium
+                           transition-colors duration-200
+                           ${
+                             theme === "dark"
+                               ? "bg-green-500/20 text-green-400 hover:bg-green-500/30"
+                               : "bg-green-500 text-white hover:bg-green-600"
+                           }
+                        `}
+                >
+                  View Product
+                </button>
+              )}
             </div>
           </div>
         </Popup>
@@ -712,4 +708,4 @@ function EditProduct() {
   );
 }
 
-export default EditProduct;
+export default CreateProduct;

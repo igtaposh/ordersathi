@@ -35,6 +35,7 @@ const borderStyles = {
    default: `${theme === 'dark' ? 'border-gray-600' : 'border-gray-300'}`,
    light: `${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`,
    strong: `${theme === 'dark' ? 'border-gray-500' : 'border-gray-400'}`,
+   
 };
 
 // Interactive Elements

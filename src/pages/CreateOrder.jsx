@@ -1,409 +1,913 @@
-import React, { useContext, useEffect, useState } from 'react';
-import axiosInstance from '../api/axiosInstance';
-import { SupplierContext } from '../context/SupplierContext';
-import { ProductContext } from '../context/ProductContext';
+import React, { useContext, useEffect, useState, useCallback } from "react";
+import axiosInstance from "../api/axiosInstance";
+import { SupplierContext } from "../context/SupplierContext";
+import { ProductContext } from "../context/ProductContext";
 import { RiAiGenerate } from "react-icons/ri";
-import { FaFilePdf } from "react-icons/fa6";
-import { MdKeyboardArrowDown } from 'react-icons/md';
-import { AiOutlineLoading3Quarters } from 'react-icons/ai';
-import { useTheme } from '../context/ThemeContext';
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { BiError, BiStore } from "react-icons/bi";
+import { MdArrowForward } from "react-icons/md";
+import { useTheme } from "../context/ThemeContext";
+import Search from "../components/Search";
+import Popup from "../components/Popup";
+import { Link, useNavigate } from "react-router-dom";
+import { GrStatusGood } from "react-icons/gr";
+import { IoMdDownload } from "react-icons/io";
+
+
 
 const CreateOrder = () => {
-   const { theme } = useTheme();
+  const { theme } = useTheme();
+  const navigate = useNavigate();
+// Context hooks
+  const { suppliers, setSuppliers } = useContext(SupplierContext);
+  const { products, setProducts } = useContext(ProductContext);
+  // Random pastel color generator
+  const getRandomColor = (seed) => {
+    const colors = [
+      "bg-blue-500/20 text-blue-600",
+      "bg-purple-500/20 text-purple-600",
+      "bg-green-500/20 text-green-600",
+      "bg-amber-500/20 text-amber-600",
+      "bg-pink-500/20 text-pink-600",
+      "bg-indigo-500/20 text-indigo-600",
+      "bg-rose-500/20 text-rose-600",
+      "bg-cyan-500/20 text-cyan-600",
+    ];
+    const darkColors = [
+      "bg-blue-500/20 text-blue-400",
+      "bg-purple-500/20 text-purple-400",
+      "bg-green-500/20 text-green-400",
+      "bg-amber-500/20 text-amber-400",
+      "bg-pink-500/20 text-pink-400",
+      "bg-indigo-500/20 text-indigo-400",
+      "bg-rose-500/20 text-rose-400",
+      "bg-cyan-500/20 text-cyan-400",
+    ];
 
-   // State for form data
-   const [selectedSupplier, setSelectedSupplier] = useState('');
-   const [quantities, setQuantities] = useState({});
-   const [orderId, setOrderId] = useState(null);
+    const index = seed.charCodeAt(0) % colors.length;
+    return theme === "dark" ? darkColors[index] : colors[index];
+  };
 
-   // Search state
-   const [searchTerm, setSearchTerm] = useState('');
-   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const getInitials = (name) => {
+    return name
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+  
+  // State management
+  const [orderState, setOrderState] = useState({
+    orderId: null,
+    isPopupOpen: true,
+    showSupplierList: false,
+    quantities: {},
+    isCreatingOrder: false,
+    isDownloadingPDF: { shopkeeper: false, supplier: false },
+    message: { type: "", text: "" },
+    showSupplierPopup: true,
+    selectedSupplier: "",
+    searchQuery: "",
+    activeFilters: [],
+    isScrollingUp: false,
+  });
 
-   // Loading states
-   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
-   const [isDownloadingPDF, setIsDownloadingPDF] = useState({ shopkeeper: false, supplier: false });
+  // Destructure state for easier access
+  const {
+    orderId,
+    quantities,
+    isCreatingOrder,
+    isDownloadingPDF,
+    message,
+    showSupplierPopup,
+    selectedSupplier,
+    searchQuery,
+    activeFilters,
+    isPopupOpen,
+    showSupplierList,
+    isScrollingUp,
+  } = orderState;
 
-   // Message states
-   const [message, setMessage] = useState({ type: '', text: '' });
+  // Memoized state updates
+  const updateOrderState = useCallback((updates) => {
+    setOrderState((prev) => ({ ...prev, ...updates }));
+  }, []);
 
-   // Context hooks
-   const { suppliers, setSuppliers } = useContext(SupplierContext);
-   const { products, setProducts } = useContext(ProductContext);
-
-   // Fetch suppliers on component mount
-   useEffect(() => {
-      const fetchSuppliers = async () => {
-         try {
-            const res = await axiosInstance.get('/supplier');
-            if (res.status !== 200) {
-               throw new Error("Failed to fetch suppliers");
-            }
-            const data = res.data;
-            setSuppliers(data);
-         } catch (error) {
-            setMessage({ type: 'error', text: 'Error fetching suppliers. Please refresh the page.' });
-         }
-      };
-      fetchSuppliers();
-   }, [setSuppliers]);
-
-   // Fetch products on component mount
-   useEffect(() => {
-      const fetchProducts = async () => {
-         try {
-            const res = await axiosInstance.get('/product');
-            if (res.status !== 200) {
-               throw new Error("Failed to fetch products");
-            }
-            const data = res.data;
-            setProducts(data);
-         } catch (error) {
-            setMessage({ type: 'error', text: 'Error fetching products. Please try again.' });
-         }
-      };
-      fetchProducts();
-   }, [setProducts]);
-
-   // Get the selected supplier ID (default to first supplier if none selected)
-   const selectedSupplierId = selectedSupplier || suppliers[0]?._id;
-
-   // Filter products based on selected supplier and search term
-   const filteredProducts = products.filter(p => {
-      const matchesSupplier = p.supplierId?._id === selectedSupplierId || p.supplierId === selectedSupplierId;
-      const matchesSearch = debouncedSearchTerm === '' ||
-         p.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-         p.type.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
-      return matchesSupplier && matchesSearch;
-   });
-
-   // Debounce search term
-   useEffect(() => {
-      const timer = setTimeout(() => {
-         setDebouncedSearchTerm(searchTerm);
-      }, 300);
-      return () => clearTimeout(timer);
-   }, [searchTerm]);
-
-   // Clear messages after 5 seconds
-   useEffect(() => {
-      if (message.text) {
-         const timer = setTimeout(() => {
-            setMessage({ type: '', text: '' });
-         }, 5000);
-         return () => clearTimeout(timer);
-      }
-   }, [message]);
-
-   // Handle quantity input changes
-   const handleQuantityChange = (productId, value) => {
-      setQuantities({ ...quantities, [productId]: value });
-   };
-
-   // Handle order creation
-   const handleSubmit = async () => {
-      // Validation checks
-      if (!selectedSupplier) {
-         setMessage({ type: 'error', text: 'Please select a supplier' });
-         return;
-      }
-
-      const productsToSend = Object.entries(quantities)
-         .filter(([_, qty]) => parseFloat(qty) > 0)
-         .map(([productId, quantity]) => ({ productId, quantity: parseInt(quantity) }));
-
-      if (productsToSend.length === 0) {
-         setMessage({ type: 'error', text: 'Please enter at least one quantity' });
-         return;
-      }
-
-      setIsCreatingOrder(true);
-      setMessage({ type: '', text: '' }); // Clear any existing messages
-
+  // Fetch suppliers on mount
+  useEffect(() => {
+    const fetchSuppliers = async () => {
       try {
-         // Send order creation request
-         const res = await axiosInstance.post('/order/new', {
-            supplierId: selectedSupplier,
-            products: productsToSend
-         });
-
-         setOrderId(res.data.order._id);
-         setMessage({ type: 'success', text: 'Order created successfully!' });
-
-         // Reset quantities after successful order creation
-         setQuantities({});
-
-      } catch (err) {
-         const errorMessage = err.response?.data?.msg || 'Error creating order. Please try again.';
-         setMessage({ type: 'error', text: errorMessage });
-      } finally {
-         setIsCreatingOrder(false);
+        const res = await axiosInstance.get("/supplier");
+        if (res.status === 200) {
+          setSuppliers(res.data);
+        }
+      } catch (error) {
+        updateOrderState({
+          message: {
+            type: "error",
+            text: "Error fetching suppliers. Please refresh the page.",
+          },
+        });
       }
-   };
+    };
+    fetchSuppliers();
+  }, [setSuppliers, updateOrderState]);
 
-   // Handle PDF download with loading state
-   const downloadPDF = async (type) => {
-      if (!orderId) {
-         setMessage({ type: 'error', text: 'No order to download yet' });
-         return;
-      }
+  // Handle supplier selection
+  const handleSupplierSelect = useCallback(
+    (value) => {
+      updateOrderState({
+        selectedSupplier: value,
+        searchQuery: "",
+        activeFilters: [],
+        quantities: {},
+      });
+    },
+    [updateOrderState]
+  );
 
-      setIsDownloadingPDF(prev => ({ ...prev, [type]: true }));
-      setMessage({ type: '', text: '' }); // Clear any existing messages
+  // Filter products based on search
+  const filteredProducts = products.filter((p) => {
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      !searchQuery ||
+      p.name.toLowerCase().includes(searchLower) ||
+      p.type.toLowerCase().includes(searchLower)
+    );
+  });
 
-      try {
-         const res = await axiosInstance.get(`/order/${orderId}/pdf?type=${type}`, {
-            responseType: 'blob'
-         });
+  // Handle search filters update
+  const handleFiltersUpdate = useCallback(
+    (filters) => {
+      updateOrderState({
+        activeFilters: filters.activeFilters || [],
+        searchQuery: filters.searchQuery || "",
+      });
+    },
+    [updateOrderState]
+  );
 
-         // Create and trigger download
-         const url = window.URL.createObjectURL(new Blob([res.data]));
-         const link = document.createElement('a');
-         link.href = url;
-         link.setAttribute('download', `order-${type}-${orderId}.pdf`);
-         document.body.appendChild(link);
-         link.click();
-         link.remove();
+  // Handle quantity changes
+  const handleQuantityChange = useCallback(
+    (productId, value) => {
+      updateOrderState({
+        quantities: { ...quantities, [productId]: value },
+      });
+    },
+    [quantities, updateOrderState]
+  );
 
-         // Clean up the URL object
-         window.URL.revokeObjectURL(url);
+  // Calculate order totals
+  const selectedProducts = Object.entries(quantities)
+    .filter(([productId, qty]) => {
+      // Only include products that exist in filtered products and have quantity > 0
+      const product = filteredProducts.find((p) => p._id === productId);
+      return parseFloat(qty) > 0 && product;
+    })
+    .map(([productId, quantity]) => {
+      const product = filteredProducts.find((p) => p._id === productId);
+      return {
+        product,
+        quantity: parseInt(quantity),
+      };
+    });
 
-         setMessage({ type: 'success', text: `${type} PDF downloaded successfully!` });
-      } catch (err) {
-         const errorMessage = err.response?.data?.msg || `Failed to download ${type} PDF`;
-         setMessage({ type: 'error', text: errorMessage });
-      } finally {
-         setIsDownloadingPDF(prev => ({ ...prev, [type]: false }));
-      }
-   };
+  const totalAmount = selectedProducts.reduce(
+    (sum, { product, quantity }) => sum + (product?.rate || 0) * quantity,
+    0
+  );
 
-   // Calculate totals
-   const selectedProducts = Object.entries(quantities)
+  const totalWeight = selectedProducts.reduce((sum, { product, quantity }) => {
+    if (!product?.weight) return sum;
+    const weightMatch = product.weight.match(/(\d+(?:\.\d+)?)/);
+    const weightValue = weightMatch ? parseFloat(weightMatch[1]) : 0;
+    return sum + weightValue * quantity;
+  }, 0);
+
+  // Handle order submission
+  const handleSubmit = async () => {
+    if (!selectedSupplier) {
+      updateOrderState({
+        message: { type: "error", text: "Please select a supplier" },
+      });
+      return;
+    }
+
+    const productsToSend = Object.entries(quantities)
       .filter(([_, qty]) => parseFloat(qty) > 0)
-      .map(([productId, quantity]) => {
-         const product = filteredProducts.find(p => p._id === productId);
-         return { product, quantity: parseInt(quantity) };
+      .map(([productId, quantity]) => ({
+        productId,
+        quantity: parseInt(quantity),
+      }));
+
+    if (productsToSend.length === 0) {
+      updateOrderState({
+        message: { type: "error", text: "Please enter at least one quantity" },
+      });
+      return;
+    }
+
+    updateOrderState({
+      isCreatingOrder: true,
+      message: { type: "", text: "" },
+    });
+
+    try {
+      const res = await axiosInstance.post("/order/new", {
+        supplierId: selectedSupplier,
+        products: productsToSend,
       });
 
-   const totalAmount = selectedProducts.reduce((sum, item) => {
-      return sum + (item.product.rate * item.quantity);
-   }, 0);
+      updateOrderState({
+        orderId: res.data.order._id,
+        message: { type: "success", text: "Order created successfully!" },
+        quantities: {},
+        isCreatingOrder: false,
+      });
+    } catch (err) {
+      updateOrderState({
+        message: {
+          type: "error",
+          text:
+            err.response?.data?.msg ||
+            "Error creating order. Please try again.",
+        },
+        isCreatingOrder: false,
+      });
+    }
+  };
 
-   const totalWeight = selectedProducts.reduce((sum, item) => {
-      const weightMatch = item.product.weight?.match(/(\d+(?:\.\d+)?)/);
-      const weightValue = weightMatch ? parseFloat(weightMatch[1]) : 0;
-      return sum + (weightValue * item.quantity);
-   }, 0);
+  // Handle PDF download
+  const handlePDFDownload = async (type) => {
+    if (!orderId) {
+      updateOrderState({
+        message: { type: "error", text: "No order to download yet" },
+      });
+      return;
+    }
 
-   return (
-      <div className={`max-w-[500px] w-screen min-h-screen mx-auto py-2 px-4 transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-900' : 'bg-zinc-200'}`}>
-         <div className={`mt-12 mb-16 flex flex-col gap-4 shadow p-4 rounded-xl text-xs transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
+    updateOrderState({
+      isDownloadingPDF: { ...isDownloadingPDF, [type]: true },
+    });
 
-            {/* Supplier Selection */}
-            <div className='relative'>
-               <select
-                  className={`p-2 rounded-lg w-full text-sm outline-none appearance-none border transition-colors duration-200 ${theme === 'dark'
-                     ? 'bg-gray-700 border-gray-600 text-gray-100 focus:border-blue-400'
-                     : 'bg-white border-zinc-300 text-gray-900 focus:border-blue-500'
-                     }`}
-                  value={selectedSupplier}
-                  onChange={(e) => setSelectedSupplier(e.target.value)}
-                  disabled={isCreatingOrder}
-               >
-                  <option className='h-6' value="">Select Supplier </option>
-                  {suppliers.map((s) => (
-                     <option key={s._id} value={s._id}>{s.name}</option>
-                  ))}
-               </select>
-               <span className={`absolute right-0 top-0 p-2 border-l transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600' : 'border-zinc-300'}`}>
-                  <MdKeyboardArrowDown className={`text-xl opacity-85 transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`} />
-               </span>
-            </div>
+    try {
+      const res = await axiosInstance.get(
+        `/order/${orderId}/pdf?type=${type}`,
+        { responseType: "blob" }
+      );
 
-            {/* Search Input */}
-            <div className='relative'>
-               <input
-                  type="text"
-                  placeholder="Search products by name or type..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className={`p-2 rounded-lg w-full text-sm outline-none border transition-colors duration-200 ${theme === 'dark'
-                     ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400 focus:border-blue-400'
-                     : 'bg-white border-zinc-300 text-gray-900 placeholder-gray-500 focus:border-blue-500'
-                     }`}
-                  disabled={isCreatingOrder}
-               />
-               {searchTerm && (
-                  <button
-                     onClick={() => setSearchTerm('')}
-                     className={`absolute right-2 top-2 text-sm transition-colors duration-200 ${theme === 'dark'
-                        ? 'text-gray-400 hover:text-gray-200'
-                        : 'text-gray-500 hover:text-gray-700'
-                        }`}
-                  >
-                     ✕
-                  </button>
-               )}
-            </div>
+      // Handle download
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `order-${type}-${orderId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
 
-            {/* Products Table */}
-            <table className={`w-full text-xs border rounded-lg overflow-hidden transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600' : 'border-gray-300'}`}>
-               <thead>
-                  <tr className={`transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                     <th className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>Product</th>
-                     <th className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>MRP</th>
-                     <th className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>Type</th>
-                     <th className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>Qty</th>
-                  </tr>
-               </thead>
-               <tbody>
-                  {
-                     filteredProducts.length === 0 && (
-                        <tr>
-                           <td colSpan="4" className={`border p-2 text-center transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-400' : 'border-gray-300 text-gray-600'}`}>
-                              {searchTerm ? 'No products found matching your search' : 'No products found'}
-                           </td>
-                        </tr>
-                     )
-                  }
-                  {filteredProducts.map((p) => (
-                     <tr key={p._id} className={`transition-colors duration-200 ${theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}`}>
-                        <td className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>{p.name}</td>
-                        <td className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>₹{p.mrp}</td>
-                        <td className={`border p-2 transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600 text-gray-200' : 'border-gray-300 text-gray-800'}`}>{p.type}</td>
-                        <td className={`border p-2 flex justify-center items-center transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600' : 'border-gray-300'}`}>
-                           <input
-                              type="number"
-                              min="0"
-                              value={quantities[p._id] || ''}
-                              onChange={(e) => handleQuantityChange(p._id, e.target.value)}
-                              className={`border p-1 rounded max-w-12 w-full outline-none text-center transition-colors duration-200 ${theme === 'dark'
-                                 ? 'bg-gray-600 border-gray-500 text-gray-100 focus:border-blue-400'
-                                 : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
-                                 }`}
-                              disabled={isCreatingOrder}
-                           />
-                        </td>
-                     </tr>
-                  ))}
-               </tbody>
-            </table>
+      updateOrderState({
+        message: {
+          type: "success",
+          text: `${type} PDF downloaded successfully!`,
+        },
+        isDownloadingPDF: { ...isDownloadingPDF, [type]: false },
+      });
+    } catch (err) {
+      updateOrderState({
+        message: {
+          type: "error",
+          text: err.response?.data?.msg || `Failed to download ${type} PDF`,
+        },
+        isDownloadingPDF: { ...isDownloadingPDF, [type]: false },
+      });
+    }
+  };
 
-            {/* Order Preview */}
-            {selectedProducts.length > 0 && (
-               <div className={`p-3 rounded-lg border transition-colors duration-200 ${theme === 'dark'
-                  ? 'bg-gray-700 border-gray-600'
-                  : 'bg-blue-50 border-blue-200'
-                  }`}>
-                  <h3 className={`font-semibold mb-2 text-sm transition-colors duration-200 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
-                     Order Preview
-                  </h3>
-                  <div className="flex justify-between items-center">
-                     <div className={`text-xs transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                        <div>Total Items: {selectedProducts.length}</div>
-                        <div>Total Weight: {totalWeight.toFixed(1)} kg</div>
-                     </div>
-                     <div className={`text-sm font-semibold transition-colors duration-200 ${theme === 'dark' ? 'text-green-400' : 'text-green-700'}`}>
-                        ₹{totalAmount.toFixed(2)}
-                     </div>
-                  </div>
-               </div>
-            )}
+  // First, remove or modify the existing handleSupplierSelect function
+  // Replace the handleSupplierSelection function with this updated version:
+  const handleSupplierSelection = async (supplierId) => {
+    console.log(supplierId);
+    try {
+      // Update supplier selection state
+      updateOrderState({
+        selectedSupplier: supplierId,
+        searchQuery: "",
+        activeFilters: [],
+        quantities: {}, // Reset quantities when supplier changes
+      });
 
-            {/* Message Display */}
-            {message.text && (
-               <div className={`p-3 rounded-lg text-sm font-medium border transition-colors duration-200 ${message.type === 'success'
-                  ? theme === 'dark'
-                     ? 'bg-green-900 text-green-200 border-green-700'
-                     : 'bg-green-100 text-green-800 border-green-200'
-                  : theme === 'dark'
-                     ? 'bg-red-900 text-red-200 border-red-700'
-                     : 'bg-red-100 text-red-800 border-red-200'
-                  }`}>
-                  {message.text}
-               </div>
-            )}
+      if (supplierId) {
+        // Fetch products for selected supplier
+        const res = await axiosInstance.get(`/product/${supplierId}`);
+        if (res.status === 200) {
+          setProducts(res.data); // Update products with supplier-specific products
+        }
+      } else {
+        setProducts([]); // Clear products if no supplier selected
+      }
+    } catch (error) {
+      updateOrderState({
+        message: {
+          type: "error",
+          text: "Error fetching supplier products. Please try again.",
+        },
+      });
+      setProducts([]); // Clear products on error
+    }
+  };
 
-            {/* Create Order Button */}
-            <button
-               onClick={handleSubmit}
-               disabled={isCreatingOrder || !selectedSupplier}
-               className={`flex w-full justify-center items-center text-xs shadow-md border rounded-lg py-2 px-4 gap-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${isCreatingOrder || !selectedSupplier
-                  ? theme === 'dark'
-                     ? 'border-gray-500 text-gray-500 cursor-not-allowed opacity-60 bg-gray-700'
-                     : 'border-gray-400 text-gray-400 cursor-not-allowed opacity-60 bg-zinc-100'
-                  : theme === 'dark'
-                     ? 'border-green-600 text-green-400 hover:bg-green-900 cursor-pointer bg-gray-700 focus:ring-green-500 focus:ring-offset-gray-800'
-                     : 'border-green-700 text-green-700 hover:bg-green-50 cursor-pointer bg-zinc-100 focus:ring-green-400 focus:ring-offset-white'
-                  }`}
+  // Scroll detection effect
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const isScrollingUp = currentScrollY < lastScrollY;
+
+      updateOrderState({ isScrollingUp });
+      lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <div
+      className={`max-w-[500px] w-screen min-h-screen mx-auto py-2 px-4 relative transition-colors duration-200 ${
+        theme === "dark" ? "bg-gray-900" : "bg-zinc-300"
+      }`}
+    >
+      {/* Supplier Selection Popup */}
+      {isPopupOpen && (
+        <Popup
+          onClose={() => {
+            updateOrderState({
+              isPopupOpen: false,
+            });
+          }}
+        >
+          {/* Your popup content */}
+          <div
+            className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full p-6 rounded-xl flex flex-col items-center gap-4 shadow-xl border transition-all duration-200 ${
+              theme === "dark"
+                ? "bg-gray-800 border-gray-700"
+                : "bg-white border-gray-200"
+            }
+        `}
+          >
+            {/* Icon */}
+            <div
+              className={`
+            w-12 h-12 rounded-full
+            flex items-center justify-center
+            ${theme === "dark" ? "bg-gray-700" : "bg-gray-100"}
+          `}
             >
-               <span>
-                  {isCreatingOrder ? (
-                     <AiOutlineLoading3Quarters className='text-lg animate-spin' />
-                  ) : (
-                     <RiAiGenerate className='text-lg' />
-                  )}
-               </span>
-               <span>{isCreatingOrder ? 'Creating Order...' : 'Create Order'}</span>
+              <BiStore
+                className={`text-2xl ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                }`}
+              />
+            </div>
+            {/* Title */}
+            <div className="text-center">
+              <h3
+                className={`
+              text-md font-semibold mb-1
+              ${theme === "dark" ? "text-gray-200" : "text-gray-800"}
+            `}
+              >
+                Select a Supplier
+              </h3>
+              <p
+                className={`text-xs my-2 ${
+                  theme === "dark" ? "text-gray-600" : "text-gray-600"
+                }`}
+              >
+                Choose a supplier to continue with your order
+              </p>
+            </div>
+            {/* Supplier Selection */}
+
+            <div
+              className={`w-full flex flex-col gap-2 px-2 py-1 rounded-md outline-none border text-xs transition-colors duration-200 ${
+                theme === "dark"
+                  ? "bg-gray-700 border-gray-600 text-gray-200"
+                  : "bg-gray-100 border-gray-300 text-gray-800"
+              }
+    ${!selectedSupplier && "text-gray-400"}
+  `}
+            >
+              <div
+                onClick={() => {
+                  updateOrderState({ showSupplierList: !showSupplierList });
+                }}
+                className={`p-2 cursor-pointer flex items-center justify-between transition-all duration-200  ${
+                  showSupplierList
+                    ? theme === "dark"
+                      ? "rounded-none border-b-2 border-gray-600 pb-4"
+                      : "rounded-none border-b-2 border-gray-200 pb-4"
+                    : "border-none pb-0 rounded-lg"
+                }`}
+              >
+                <span>
+                  {selectedSupplier
+                    ? suppliers.find(
+                        (supplier) => supplier._id === selectedSupplier
+                      )?.name
+                    : "Select Supplier"}
+                </span>
+                <svg
+                  className={`w-4 h-4 transition-transform duration-300 ${
+                    showSupplierList ? "rotate-180" : ""
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
+
+              <div
+                className={`
+    overflow-auto transition-all duration-200 ease-in-out
+    ${showSupplierList ? "max-h-28 opacity-100" : "max-h-0 opacity-0"}
+  `}
+              >
+                <div className="flex flex-col gap-1 overflow-y-auto pr-1">
+                  {suppliers.map((supplier) => (
+                    <div
+                      key={supplier._id}
+                      onClick={() => {
+                        handleSupplierSelection(supplier._id);
+                      }}
+                      className={`
+            p-2 rounded-lg cursor-pointer
+            transition-all duration-200
+            ${
+              selectedSupplier === supplier._id
+                ? theme === "dark"
+                  ? "bg-purple-500/20 text-purple-400"
+                  : "bg-purple-100 text-purple-600"
+                : theme === "dark"
+                ? "hover:bg-gray-600/30"
+                : "hover:bg-gray-100"
+            }
+          `}
+                    >
+                      {supplier.name}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            {/* Continue Button */}
+            <button
+              onClick={() => {
+                if (selectedSupplier) {
+                  updateOrderState({
+                    isPopupOpen: false,
+                  });
+                }
+              }}
+              disabled={!selectedSupplier}
+              className={`
+      w-full py-3 rounded-lg
+      flex items-center justify-center gap-2
+      text-xs font-medium
+      transition-all duration-200
+      ${
+        !selectedSupplier
+          ? theme === "dark"
+            ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+            : "bg-gray-100 text-gray-400 cursor-not-allowed"
+          : theme === "dark"
+          ? "bg-purple-500/20 text-purple-400 hover:bg-purple-500/30"
+          : "bg-purple-500 text-white hover:bg-purple-600"
+      }
+   `}
+            >
+              <span>Continue to Products</span>
+              <MdArrowForward className="text-lg" />
             </button>
 
-            {/* PDF Download Buttons */}
-            {orderId && (
-               <div className="flex flex-col w-full justify-center items-center gap-2">
-                  {/* Shopkeeper PDF Button */}
-                  <button
-                     onClick={() => downloadPDF('shopkeeper')}
-                     disabled={isDownloadingPDF.shopkeeper}
-                     className={`w-full flex items-center justify-center gap-2 text-xs py-2 px-2 border rounded-md shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${isDownloadingPDF.shopkeeper
-                        ? theme === 'dark'
-                           ? 'border-gray-500 text-gray-500 cursor-not-allowed opacity-60 bg-gray-700'
-                           : 'border-gray-400 text-gray-400 cursor-not-allowed opacity-60 bg-zinc-100'
-                        : theme === 'dark'
-                           ? 'border-red-500 text-red-400 hover:bg-red-900 cursor-pointer bg-gray-700 focus:ring-red-500 focus:ring-offset-gray-800'
-                           : 'border-red-600 text-red-600 hover:bg-red-50 cursor-pointer bg-zinc-100 focus:ring-red-400 focus:ring-offset-white'
-                        }`}
-                  >
-                     <span>
-                        {isDownloadingPDF.shopkeeper ? (
-                           <AiOutlineLoading3Quarters className='text-md animate-spin' />
-                        ) : (
-                           <FaFilePdf className='text-md' />
-                        )}
-                     </span>
-                     <span>
-                        {isDownloadingPDF.shopkeeper ? 'Downloading...' : 'Shopkeeper PDF'}
-                     </span>
-                  </button>
+            {/* Go Back Button */}
+            <button
+              onClick={() => {
+                navigate(-1);
+              }}
+              className={`
+                w-full py-2.5 rounded-lg
+                flex items-center justify-center gap-2
+                text-xs font-medium
+                transition-all duration-200
+                ${
+                  theme === "dark"
+                    ? "bg-gray-700 text-gray-400 hover:bg-gray-600"
+                    : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+                }
+              `}
+            >
+              <span>Go Back</span>
+            </button>
+          </div>
+        </Popup>
+      )}
 
-                  {/* Supplier PDF Button */}
-                  <button
-                     onClick={() => downloadPDF('supplier')}
-                     disabled={isDownloadingPDF.supplier}
-                     className={`w-full flex items-center justify-center gap-2 text-xs py-2 px-2 border rounded-md shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${isDownloadingPDF.supplier
-                        ? theme === 'dark'
-                           ? 'border-gray-500 text-gray-500 cursor-not-allowed opacity-60 bg-gray-700'
-                           : 'border-gray-400 text-gray-400 cursor-not-allowed opacity-60 bg-zinc-100'
-                        : theme === 'dark'
-                           ? 'border-red-500 text-red-400 hover:bg-red-900 cursor-pointer bg-gray-700 focus:ring-red-500 focus:ring-offset-gray-800'
-                           : 'border-red-600 text-red-600 hover:bg-red-50 cursor-pointer bg-zinc-100 focus:ring-red-400 focus:ring-offset-white'
-                        }`}
+      {/* Main Content - only show if supplier is selected */}
+      <div
+        className={`
+      mt-16 mb-16 flex flex-col gap-4 rounded-xl text-xs
+      transition-colors duration-20
+    `}
+      >
+        {/* Replace old search with new Search component */}
+        <Search
+          onFiltersUpdate={handleFiltersUpdate}
+          enableDate={false}
+          enableSupplier={false}
+        />
+        <div
+          className={`
+  w-full
+  transition-colors duration-200
+  
+`}
+        >
+          <div className="w-full flex items-center justify-between mb-4">
+            <span
+              className={`text-[10px] font-medium ${
+                theme === "dark" ? "text-gray-400" : "text-gray-700"
+              }`}
+            >
+              Selected Supplier:{" "}
+              {suppliers.find((s) => s._id === selectedSupplier)?.name || ""}{" "}
+              <span className="text-gray-500">
+                ({filteredProducts.length} Products)
+              </span>
+            </span>
+          </div>
+          {/* Products List */}
+          <div className="flex flex-col gap-2 items-center justify-between transition-colors duration-200">
+            {filteredProducts.length === 0 ? (
+              <div
+                className={`
+        text-center text-md
+        ${theme === "dark" ? "text-gray-400" : "text-gray-700"}
+      `}
+              >
+                {searchQuery
+                  ? "No products found matching your search"
+                  : "No products found"}
+              </div>
+            ) : (
+              filteredProducts.map((p) => (
+                <div
+                  key={p._id}
+                  className={`p-2 w-full flex
+            transition-colors gap-1  duration-200 border rounded-md items-center ${
+              theme === "dark"
+                ? "bg-gray-800 border-gray-700 text-gray-200"
+                : "bg-gray-50 border-gray-200 text-gray-800"
+            } `}
+                >
+                  <Link
+                    to={`/product-profile/${p._id}`}
+                    className="w-1/5 flex items-center justify-center"
                   >
-                     <span>
-                        {isDownloadingPDF.supplier ? (
-                           <AiOutlineLoading3Quarters className='text-md animate-spin' />
-                        ) : (
-                           <FaFilePdf className='text-md' />
-                        )}
-                     </span>
-                     <span>
-                        {isDownloadingPDF.supplier ? 'Downloading...' : 'Supplier PDF'}
-                     </span>
-                  </button>
-               </div>
+                    <div
+                      className={`
+          h-12 w-12 rounded-xl flex items-center justify-center
+          font-bold text-lg ${getRandomColor(p.name)}
+        `}
+                    >
+                      {getInitials(p.name)}
+                    </div>
+                  </Link>
+                  <div className="flex flex-col w-3/5 gap-1">
+                    <Link
+                      to={`/product-profile/${p._id}`}
+                      className={`w-3/4 flex items-center ${
+                        theme === "dark" ? "text-gray-200" : "text-gray-800"
+                      }`}
+                    >
+                      {p.name}
+                    </Link>
+                    <div className="flex gap-1">
+                      <p
+                        className={`px-2 text-[10px] text-white rounded-lg text-center  bg-green-800 ${
+                          theme === "dark" ? "text-gray-200" : "text-gray-800"
+                        }`}
+                      >
+                        {p.type || "N/A"}
+                      </p>
+                      <p
+                        className={`px-2 text-[10px] text-white rounded-lg text-center  bg-green-800 ${
+                          theme === "dark" ? "text-gray-200" : "text-gray-800"
+                        }`}
+                      >
+                        ₹{p.rate || "N/A"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="w-1/5 flex justify-center items-center">
+                    <input
+                      type="number"
+                      min="0"
+                      value={quantities[p._id] || ""}
+                      onChange={(e) =>
+                        handleQuantityChange(p._id, e.target.value)
+                      }
+                      className={`
+                w-full max-w-[60px] p-1
+                border rounded text-center outline-none
+                transition-colors duration-200
+                ${
+                  theme === "dark"
+                    ? "bg-gray-600 border-gray-500 text-gray-100 focus:border-blue-400"
+                    : "bg-gray-200 border-gray-300 text-gray-900 "
+                }
+              `}
+                      disabled={isCreatingOrder}
+                    />
+                  </div>
+                </div>
+              ))
             )}
-         </div>
-      </div >
-   );
+          </div>
+        </div>
+
+        {/* Message Display */}
+        {/* message.text */}
+        {message.text && (
+          <Popup>
+            <div
+              className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full p-6 rounded-xl flex flex-col items-center gap-4 shadow-xl border transition-all duration-200 ${
+                theme === "dark"
+                  ? "bg-gray-800 border-gray-700"
+                  : "bg-white border-gray-200"
+              }
+        `}
+            >
+              {/* Icon */}
+              <div
+                className={`
+                      w-16 h-16 rounded-full
+                      flex items-center justify-center
+                      ${
+                        message.type === "error"
+                          ? theme === "dark"
+                            ? "bg-red-500/10"
+                            : "bg-red-50"
+                          : theme === "dark"
+                          ? "bg-green-500/10"
+                          : "bg-green-50"
+                      }
+                    `}
+              >
+                {message.type === "error" ? (
+                  <BiError
+                    className={`text-3xl ${
+                      theme === "dark" ? "text-red-400" : "text-red-500"
+                    }`}
+                  />
+                ) : (
+                  <GrStatusGood
+                    className={`text-3xl ${
+                      theme === "dark" ? "text-green-400" : "text-green-500"
+                    }`}
+                  />
+                )}
+              </div>
+              <div
+                className={`w-full p-2 text-center rounded-lg text-xs font-medium border transition-colors duration-200 ${
+                  message.type === "success"
+                    ? theme === "dark"
+                      ? "bg-green-900 text-green-200 border-green-700"
+                      : "bg-green-100 text-green-800 border-green-200"
+                    : theme === "dark"
+                    ? "bg-red-900 text-red-200 border-red-700"
+                    : "bg-red-100 text-red-800 border-red-200"
+                }`}
+              >
+                {message.text}
+              </div>
+              {orderId && (
+                <div className="flex flex-col w-full justify-center items-center gap-2">
+                  {/* Shopkeeper PDF Button */}
+                  {message.type === "success" && (
+                    <>
+                      <button
+                        onClick={() => handlePDFDownload("shopkeeper")}
+                        disabled={isDownloadingPDF.shopkeeper}
+                        className={`w-full flex items-center justify-center gap-2 text-xs p-3 rounded-md transition-all duration-200 font-medium ${
+                          isDownloadingPDF.shopkeeper
+                            ? "text-gray-400 bg-[#5e2b9dc1] cursor-not-allowed"
+                            : "text-gray-300 bg-[#5e2b9d]"
+                        }`}
+                      >
+                        {isDownloadingPDF.shopkeeper ? (
+                          <>
+                            <AiOutlineLoading3Quarters className="animate-spin" />
+                            <span>Downloading...</span>
+                          </>
+                        ) : (
+                          <>
+                            <IoMdDownload />
+                            <span>Download (Shopkeeper Version)</span>
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handlePDFDownload("supplier")}
+                        disabled={isDownloadingPDF.supplier}
+                        className={`w-full flex items-center justify-center gap-2 text-xs p-3 rounded-md transition-all duration-200 font-medium ${
+                          isDownloadingPDF.supplier
+                            ? "text-gray-400 bg-[#5e2b9dc1] cursor-not-allowed"
+                            : "text-gray-300 bg-[#5e2b9d]"
+                        }`}
+                      >
+                        {isDownloadingPDF.supplier ? (
+                          <>
+                            <AiOutlineLoading3Quarters className="animate-spin" />
+                            <span>Downloading...</span>
+                          </>
+                        ) : (
+                          <>
+                            <IoMdDownload />
+                            <span>Download (Supplier Version)</span>
+                          </>
+                        )}
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+              <button
+                onClick={() => {
+                  updateOrderState({ message: { type: "", text: "" } });
+                }}
+                className={`
+                w-full py-2.5 rounded-lg
+                flex items-center justify-center gap-2
+                text-xs font-medium
+                transition-all duration-200
+                ${
+                  theme === "dark"
+                    ? "bg-gray-700 text-gray-400 hover:bg-gray-600"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }
+              `}
+              >
+                <span>Close</span>
+              </button>
+            </div>
+          </Popup>
+        )}
+      </div>
+      {/* Order Preview */}
+      <div
+        className={`
+    fixed w-full max-w-[500px] left-1/2 -translate-x-1/2
+    ${
+      selectedProducts.length > 0
+        ? isScrollingUp
+          ? "-bottom-32"
+          : "bottom-0"
+        : "-bottom-32"
+    }
+    transition-all duration-500 ease-in-out z-50
+  `}
+      >
+        {/* Gradient overlay for better visibility */}
+        <div className="absolute inset-x-0 -top-8 h-8 bg-gradient-to-t from-black/10 to-transparent" />
+
+        {/* Main container */}
+        <div
+          className={`
+    px-4 py-2 backdrop-blur-md shadow-xl
+    border-t
+    ${
+      theme === "dark"
+        ? "bg-gray-800/95 border-gray-700"
+        : "bg-white/95 border-gray-200"
+    }
+  `}
+        >
+          <div className="flex flex-col items-center justify-between gap-2">
+            {/* Order details */}
+            <div className="flex-1 grid grid-cols-3 gap-2 w-full">
+              <div
+                className={`
+          flex flex-col items-center p-2 rounded-lg
+          ${theme === "dark" ? "bg-gray-700/50" : "bg-gray-200"}
+        `}
+              >
+                <span
+                  className={`text-[10px] ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-800"
+                  }`}
+                >
+                  Amount
+                </span>
+                <span
+                  className={`text-xs font-semibold ${
+                    theme === "dark" ? "text-green-400" : "text-green-600"
+                  }`}
+                >
+                  ₹{totalAmount.toFixed(2) * 1}
+                </span>
+              </div>
+
+              <div
+                className={`
+          flex flex-col items-center p-2 rounded-lg
+          ${theme === "dark" ? "bg-gray-700/50" : "bg-gray-200"}
+        `}
+              >
+                <span
+                  className={`text-[10px] ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-800"
+                  }`}
+                >
+                  Items
+                </span>
+                <span
+                  className={`text-xs font-semibold ${
+                    theme === "dark" ? "text-green-400" : "text-green-600"
+                  }`}
+                >
+                  {selectedProducts.length}
+                </span>
+              </div>
+
+              <div
+                className={`
+          flex flex-col items-center p-2 rounded-lg
+          ${theme === "dark" ? "bg-gray-700/50" : "bg-gray-200"}
+        `}
+              >
+                <span
+                  className={`text-[10px] ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-800"
+                  }`}
+                >
+                  Weight
+                </span>
+                <span
+                  className={`text-xs font-semibold ${
+                    theme === "dark" ? "text-green-400" : "text-green-600"
+                  }`}
+                >
+                  {totalWeight.toFixed(1)} kg
+                </span>
+              </div>
+            </div>
+
+            {/* Create order button */}
+            <button
+              onClick={handleSubmit}
+              disabled={isCreatingOrder || !selectedSupplier}
+              className={`
+         w-full h-12 px-2
+          rounded-lg font-medium text-xs
+          flex items-center justify-center gap-1
+          transition-all duration-200
+          ${
+            isCreatingOrder || !selectedSupplier
+              ? theme === "dark"
+                ? "bg-gray-700 text-gray-500"
+                : "bg-gray-100 text-gray-400"
+              : theme === "dark"
+              ? "bg-green-500/20 text-green-400 hover:bg-green-500/30 active:scale-95"
+              : "bg-green-500 text-white hover:bg-green-600 active:scale-95"
+          }
+          disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100
+        `}
+            >
+              <span>
+                {isCreatingOrder ? (
+                  <AiOutlineLoading3Quarters className="text-lg animate-spin" />
+                ) : (
+                  <RiAiGenerate className="text-lg" />
+                )}
+              </span>
+              <span>{isCreatingOrder ? "Creating..." : "Create Order"}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default CreateOrder;

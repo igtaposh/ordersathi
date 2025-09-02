@@ -7,7 +7,7 @@ import { AuthProvider, AuthContext } from './context/AuthContext';
 import { ProductProvider } from './context/ProductContext';
 import { SupplierProvider } from './context/SupplierContext';
 import { OrderProvider } from './context/OrderContext';
-import { StatsProvider } from './context/Stats.jsx';
+import { StatsProvider } from './context/StatsContext.jsx';
 import { StockReportProvider } from './context/StockReport.jsx';
 import { ThemeProvider } from './context/ThemeContext.jsx';
 

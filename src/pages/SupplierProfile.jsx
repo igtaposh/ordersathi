@@ -1,292 +1,300 @@
-import React, { useContext, useEffect, useState } from 'react'
-import defaultAvatar from '../assets/logo.png'
-import axiosInstance from '../api/axiosInstance'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import { FaRegEdit } from "react-icons/fa";
-import { SupplierContext } from '../context/SupplierContext'
-import { AiOutlineLoading3Quarters } from 'react-icons/ai'
-import { useTheme } from '../context/ThemeContext'
+import React, { useContext, useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { motion } from "framer-motion";
+import { FiEdit, FiTrash2 } from "react-icons/fi";
+import { CiEdit } from "react-icons/ci";
+import { IoArrowBack, IoCameraOutline } from "react-icons/io5";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { SupplierContext } from "../context/SupplierContext";
+import { ProductContext } from "../context/ProductContext";
+import { useTheme } from "../context/ThemeContext";
+import axiosInstance from "../api/axiosInstance";
 
-/**
- * SupplierProfile Component
- * Displays supplier details with edit and delete functionality
- * @returns {JSX.Element} SupplierProfile component
- */
 function SupplierProfile() {
   const { id } = useParams();
   const { supplier, setSupplier } = useContext(SupplierContext);
+  const { products, setProducts } = useContext(ProductContext);
+  console.log(products);
   const navigate = useNavigate();
   const { theme } = useTheme();
 
-  // Supplier data state
-  const [supplierProfile, setSupplierProfile] = useState({});
-
-  // Loading states for different operations
   const [loadingStates, setLoadingStates] = useState({
-    fetchingSupplier: false,
     deleting: false,
   });
+  const [message, setMessage] = useState({ type: "", text: "" });
 
-  // Message state for user feedback
-  const [message, setMessage] = useState({
-    text: '',
-    type: '', // 'success', 'error', 'info'
-  });
-
-  // Confirmation modal state
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-  /**
-   * Display message to user with auto-hide functionality
-   * @param {string} text - Message text
-   * @param {string} type - Message type (success/error/info)
-   */
-  const showMessage = (text, type) => {
-    setMessage({ text, type });
-    setTimeout(() => {
-      setMessage({ text: '', type: '' });
-    }, 5000);
-  };
-
-  /**
-   * Fetch supplier data on component mount
-   */
   useEffect(() => {
     const fetchSupplier = async () => {
-      if (!id) {
-        showMessage('Invalid supplier ID', 'error');
-        navigate('/suppliers');
-        return;
-      }
-
-      setLoadingStates(prev => ({ ...prev, fetchingSupplier: true }));
-
       try {
         const response = await axiosInstance.get(`/supplier/${id}`);
-        setSupplierProfile(response.data);
-        showMessage('Supplier data loaded successfully', 'success');
+        setSupplier(response.data);
+        console.log(response.data);
       } catch (error) {
-        const errorMessage = error.response?.data?.msg ||
-          error.response?.data?.message ||
-          'Failed to load supplier data';
-        showMessage(errorMessage, 'error');
-
-        // Navigate back to suppliers list after a delay
-        setTimeout(() => {
-          navigate('/suppliers');
-        }, 3000);
-      } finally {
-        setLoadingStates(prev => ({ ...prev, fetchingSupplier: false }));
+        setMessage({
+          type: "error",
+          text: error.response?.data?.msg || "Failed to load supplier",
+        });
       }
     };
 
     fetchSupplier();
-  }, [id, navigate]);
+  }, [setSupplier]);
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axiosInstance.get(`/product`);
+        setProducts(response.data);
+      } catch (error) {
+        setMessage({
+          type: "error",
+          text: error.response?.data?.msg || "Failed to load Products length",
+        });
+      }
+    };
 
-  /**
-   * Handle supplier deletion with confirmation
-   */
-  const handleDeleteClick = () => {
-    setShowDeleteConfirm(true);
+    fetchProducts();
+  }, [setProducts]);
+
+  const initials = (name) => {
+    if (!name) return "S";
+    const words = name.split(" ");
+    return (words[0][0] + (words[1] ? words[1][0] : "")).toUpperCase();
   };
 
-  /**
-   * Confirm supplier deletion
-   */
-  const confirmDelete = async () => {
-    setShowDeleteConfirm(false);
-    setLoadingStates(prev => ({ ...prev, deleting: true }));
+  const supplierDetails = [
+    {
+      label: "Contact",
+      value: supplier?.contact,
+      isPrimary: true,
+    },
+    {
+      label: "Address",
+      value: supplier?.address,
+      isPrimary: true,
+    },
+    {
+      label: "Total Products",
+      value: products.filter((p) => p.supplierId?._id === supplier?._id).length,
+    },
+    {
+      label: "Added On",
+      value: new Date(supplier?.createdAt).toLocaleDateString(),
+    },
+  ];
 
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to delete this supplier?")) {
+      return;
+    }
+
+    setLoadingStates((prev) => ({ ...prev, deleting: true }));
     try {
       await axiosInstance.delete(`/supplier/${id}`);
-      setSupplier(null);
-      showMessage('Supplier deleted successfully!', 'success');
-
-      // Navigate after a short delay to show success message
-      setTimeout(() => {
-        navigate('/suppliers');
-      }, 1500);
-    } catch (err) {
-      const errorMessage = err.response?.data?.msg ||
-        err.response?.data?.message ||
-        'Failed to delete supplier. Please try again.';
-      showMessage(errorMessage, 'error');
+      navigate("/suppliers");
+    } catch (error) {
+      setMessage({
+        type: "error",
+        text: error.response?.data?.msg || "Failed to delete supplier",
+      });
     } finally {
-      setLoadingStates(prev => ({ ...prev, deleting: false }));
+      setLoadingStates((prev) => ({ ...prev, deleting: false }));
     }
   };
 
-  /**
-   * Cancel deletion
-   */
-  const cancelDelete = () => {
-    setShowDeleteConfirm(false);
-  };
-
-
-
   return (
-    <div>
-      {/* Loading overlay for initial data fetch */}
-      {loadingStates.fetchingSupplier && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className={`p-6 rounded-lg flex items-center gap-3 transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-900'}`}>
-            <AiOutlineLoading3Quarters className="animate-spin text-blue-500 text-xl" />
-            <span>Loading supplier data...</span>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className={`p-6 rounded-lg max-w-md w-full mx-4 transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-            <h3 className={`text-lg font-semibold mb-4 transition-colors duration-200 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Confirm Deletion</h3>
-            <p className={`mb-6 transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-              Are you sure you want to delete this supplier? This action cannot be undone and will also affect any associated products.
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={cancelDelete}
-                className={`px-4 py-2 rounded-md transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-600 text-gray-200 hover:bg-gray-500' : 'bg-gray-300 text-gray-700 hover:bg-gray-400'}`}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Message display */}
-      {message.text && (
-        <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-40 px-6 py-3 rounded-lg shadow-lg transition-all duration-300 ${message.type === 'success'
-          ? theme === 'dark'
-            ? 'bg-green-900 text-green-200 border border-green-700'
-            : 'bg-green-500 text-white'
-          : message.type === 'error'
-            ? theme === 'dark'
-              ? 'bg-red-900 text-red-200 border border-red-700'
-              : 'bg-red-500 text-white'
-            : theme === 'dark'
-              ? 'bg-blue-900 text-blue-200 border border-blue-700'
-              : 'bg-blue-500 text-white'
-          }`}>
-          {message.text}
-        </div>
-      )}
-
-      <div className={`max-w-[500px] w-screen min-h-screen mx-auto p-4 flex flex-col items-center transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-900' : 'bg-neutral-200'}`}>
-        {/* Supplier Header Card */}
-        <div className={`rounded-xl shadow w-full flex justify-between items-center mt-8 p-4 transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className='flex items-center gap-4'>
-            <div>
-              <img
-                src={defaultAvatar}
-                alt='Supplier'
-                className='w-12 h-12 rounded-full object-cover'
-              />
-
-
-            </div>
-            <span className={`transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-900'}`}>{supplierProfile.name || '-'}</span>
-
-
-          </div>
-          {!loadingStates.fetchingSupplier && (
-            <Link
-              to={`/edit-supplier/${id}`}
-              className={`flex items-center gap-2 transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300 hover:text-blue-400' : 'text-blue-600 hover:text-blue-800'}`}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className={`max-w-[500px] w-screen min-h-screen mx-auto relative ${
+        theme === "dark" ? "bg-gray-900" : "bg-gray-50"
+      }`}
+    >
+      {/* Header Section */}
+      <div className="relative h-64">
+        <div className={`absolute inset-0`}>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+            <div
+              className={`
+              w-24 h-24 rounded-2xl
+              flex items-center justify-center
+              text-3xl font-bold
+              ${
+                theme === "dark"
+                  ? "bg-purple-500/20 text-purple-300"
+                  : "bg-purple-100 text-purple-600"
+              }
+            `}
             >
-              <span>
-                <FaRegEdit className={`text-xs cursor-pointer transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300' : 'text-zinc-900'}`} />
-              </span>
-              <span className='text-sm'>Edit</span>
-            </Link>
-          )}
-        </div>
-
-        {/* Supplier Details Card */}
-        <div className={`rounded-xl shadow p-4 mt-4 w-full flex flex-col gap-4 transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className='flex justify-between items-center'>
-            <h3 className={`text-lg font-semibold transition-colors duration-200 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Supplier Details</h3>
-            {!loadingStates.fetchingSupplier && (
-              <Link
-                to={`/edit-supplier/${id}`}
-                className={`flex items-center gap-2 transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300 hover:text-blue-400' : 'text-blue-600 hover:text-blue-800'}`}
-              >
-                <span>
-                  <FaRegEdit className={`text-xs cursor-pointer transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300' : 'text-zinc-900'}`} />
-                </span>
-                <span className='text-sm'>Edit</span>
-              </Link>
-            )}
-          </div>
-
-          {loadingStates.fetchingSupplier ? (
-            <div className="flex items-center justify-center py-8">
-              <AiOutlineLoading3Quarters className="animate-spin text-blue-500 text-xl" />
-              <span className={`ml-2 transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-900'}`}>Loading details...</span>
+              {initials(supplier?.name)}
             </div>
-          ) : (
-            <div className='flex flex-col text-sm gap-3'>
-              <div className={`flex justify-between items-center py-2 border-b transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600' : 'border-gray-100'}`}>
-                <span className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Name:</span>
-                <span className={`transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-900'}`}>{supplierProfile.name || '-'}</span>
-              </div>
-
-              <div className={`flex justify-between items-center py-2 border-b transition-colors duration-200 ${theme === 'dark' ? 'border-gray-600' : 'border-gray-100'}`}>
-                <span className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Phone:</span>
-                <span className={`transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-900'}`}>{supplierProfile.contact || '-'}</span>
-              </div>
-              <div className='flex justify-between items-start py-2'>
-                <span className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Address:</span>
-                <span className={`text-right max-w-[60%] transition-colors duration-200 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-900'}`}>
-                  {supplierProfile.address || '-'}
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Supplier Actions Card */}
-        <div className={`rounded-xl shadow p-4 mt-4 w-full flex flex-col gap-4 transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-          <h3 className={`text-lg font-semibold transition-colors duration-200 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Supplier Actions</h3>
-          <div className="space-y-3">
-            <Link
-              to={`/edit-supplier/${id}`}
-              className='w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg shadow transition-colors flex items-center justify-center gap-2'
-            >
-              <FaRegEdit />
-              Edit Supplier
-            </Link>
-            <button
-              className={`w-full px-4 py-3 rounded-lg shadow transition-colors flex items-center justify-center gap-2 ${loadingStates.deleting || loadingStates.fetchingSupplier
-                ? 'bg-red-300 cursor-not-allowed'
-                : 'bg-red-500 hover:bg-red-600 cursor-pointer'
-                } text-white`}
-              onClick={handleDeleteClick}
-              disabled={loadingStates.deleting || loadingStates.fetchingSupplier}
-            >
-              {loadingStates.deleting ? (
-                <>
-                  <AiOutlineLoading3Quarters className="animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                'Delete Supplier'
-              )}
-            </button>
           </div>
         </div>
       </div>
-    </div>
-  )
+
+      {/* Content Section */}
+      <div className="px-4 -mt-6">
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -20, opacity: 0 }}
+          className={`
+            rounded-2xl p-6
+            ${theme === "dark" ? "bg-gray-800" : "bg-white"}
+            shadow-lg
+          `}
+        >
+          <div className="flex justify-between items-center mb-6">
+            <h1
+              className={`text-sm font-medium ${
+                theme === "dark" ? "text-gray-100" : "text-gray-800"
+              }`}
+            >
+              {supplier?.name}
+            </h1>
+            <div className="flex gap-2">
+              <button
+                onClick={() => navigate(`/edit-supplier/${id}`)}
+                className={`
+                            p-2 rounded-lg transition-all
+                            ${
+                              theme === "dark"
+                                ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
+                                : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                            }`}
+              >
+                <CiEdit size={15} />
+              </button>
+              <button
+                className={`
+                            p-2 rounded-lg transition-all
+                            ${
+                              theme === "dark"
+                                ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
+                                : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                            }`}
+              >
+                <IoCameraOutline size={15} />
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {/* Primary Info Cards */}
+            {supplierDetails
+              .filter((detail) => detail.isPrimary)
+              .map((detail, index) => (
+                <div
+                  key={index}
+                  className={`
+                p-4 rounded-xl
+                ${theme === "dark" ? "bg-gray-700/50" : "bg-purple-50"}
+              `}
+                >
+                  <p
+                    className={`text-xs ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
+                    {detail.label}
+                  </p>
+                  <p
+                    className={`text-sm font-bold ${
+                      theme === "dark" ? "text-purple-400" : "text-purple-600"
+                    }`}
+                  >
+                    {detail.value || "Not Set"}
+                  </p>
+                </div>
+              ))}
+
+            {/* Details Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              {supplierDetails
+                .filter((detail) => !detail.isPrimary)
+                .map((detail, index) => (
+                  <div
+                    key={index}
+                    className={`
+                  p-4 rounded-xl
+                  ${theme === "dark" ? "bg-gray-700/50" : "bg-gray-50"}
+                `}
+                  >
+                    <p
+                      className={`text-xs ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-600"
+                      }`}
+                    >
+                      {detail.label}
+                    </p>
+                    <p
+                      className={`text-sm font-medium ${
+                        theme === "dark" ? "text-gray-200" : "text-gray-800"
+                      }`}
+                    >
+                      {detail.value}
+                    </p>
+                  </div>
+                ))}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-8 flex flex-col gap-2">
+              <button
+                onClick={handleDelete}
+                disabled={loadingStates.deleting}
+                className={`
+                  py-3 px-4 rounded-xl
+                  flex items-center justify-center gap-2
+                  font-medium text-sm
+                  transition-all duration-200
+                  ${
+                    theme === "dark"
+                      ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                      : "bg-red-100 text-red-600 hover:bg-red-200"
+                  }
+                  ${loadingStates.deleting && "opacity-50 cursor-not-allowed"}
+                `}
+              >
+                {loadingStates.deleting ? (
+                  <AiOutlineLoading3Quarters className="animate-spin" />
+                ) : (
+                  <FiTrash2 />
+                )}
+                <span>
+                  {loadingStates.deleting ? "Deleting..." : "Delete Supplier"}
+                </span>
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Message Toast */}
+      {message.text && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className={`
+            fixed bottom-4 left-4 right-4
+            p-4 rounded-lg shadow-lg
+            ${
+              message.type === "success"
+                ? theme === "dark"
+                  ? "bg-green-900/90 text-green-200"
+                  : "bg-green-500 text-white"
+                : theme === "dark"
+                ? "bg-red-900/90 text-red-200"
+                : "bg-red-500 text-white"
+            }
+          `}
+        >
+          {message.text}
+        </motion.div>
+      )}
+    </motion.div>
+  );
 }
 
-export default SupplierProfile
+export default SupplierProfile;

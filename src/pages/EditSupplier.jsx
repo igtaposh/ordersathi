@@ -1,8 +1,14 @@
-import React, { useEffect, useState } from 'react'
-import { useNavigate, useParams, Link } from 'react-router-dom'
-import axiosInstance from '../api/axiosInstance'
-import { AiOutlineLoading3Quarters } from 'react-icons/ai'
-import { useTheme } from '../context/ThemeContext'
+import React, { useContext, useEffect, useState } from "react";
+import { useNavigate, useParams, Link } from "react-router-dom";
+import axiosInstance from "../api/axiosInstance";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { useTheme } from "../context/ThemeContext";
+
+import { motion, AnimatePresence } from "framer-motion";
+import { IoArrowUndoOutline, IoChevronDownOutline } from "react-icons/io5";
+import { MdOutlineSave } from "react-icons/md";
+import { BiError } from "react-icons/bi";
+import Popup from "../components/Popup";
 
 /**
  * EditSupplier Component
@@ -22,15 +28,12 @@ function EditSupplier() {
   });
 
   // Loading states for different operations
-  const [loadingStates, setLoadingStates] = useState({
-    fetchingSupplier: false,
-    updating: false,
-  });
+  const [loadingStates, setLoadingStates] = useState({ updating: false });
 
   // Message state for user feedback
   const [message, setMessage] = useState({
-    text: '',
-    type: '', // 'success', 'error', 'info'
+    text: "",
+    type: "", // 'success', 'error', 'info'
   });
 
   /**
@@ -38,12 +41,6 @@ function EditSupplier() {
    * @param {string} text - Message text
    * @param {string} type - Message type (success/error/info)
    */
-  const showMessage = (text, type) => {
-    setMessage({ text, type });
-    setTimeout(() => {
-      setMessage({ text: '', type: '' });
-    }, 5000);
-  };
 
   /**
    * Fetch supplier data on component mount
@@ -51,12 +48,10 @@ function EditSupplier() {
   useEffect(() => {
     const fetchSupplier = async () => {
       if (!id) {
-        showMessage('Invalid supplier ID', 'error');
-        navigate('/suppliers');
+        setMessage({ text: "Invalid supplier ID", type: "error" });
+        navigate(`/supplier-profile/${id}`);
         return;
       }
-
-      setLoadingStates(prev => ({ ...prev, fetchingSupplier: true }));
 
       try {
         const response = await axiosInstance.get(`/supplier/${id}`);
@@ -67,20 +62,13 @@ function EditSupplier() {
           contact: supplierData.contact || "",
           address: supplierData.address || "",
         });
-
-        showMessage('Supplier data loaded successfully', 'success');
       } catch (error) {
-        const errorMessage = error.response?.data?.msg ||
+        const errorMessage =
+          error.response?.data?.msg ||
           error.response?.data?.message ||
-          'Failed to load supplier data';
-        showMessage(errorMessage, 'error');
-
-        // Navigate back to suppliers list after a delay
-        setTimeout(() => {
-          navigate('/suppliers');
-        }, 3000);
-      } finally {
-        setLoadingStates(prev => ({ ...prev, fetchingSupplier: false }));
+          "Failed to load supplier data";
+        setMessage({ text: errorMessage, type: "error" });
+        navigate(`/supplier-profile/${id}`);
       }
     };
 
@@ -93,15 +81,15 @@ function EditSupplier() {
    */
   const validateForm = () => {
     if (!form.name?.trim()) {
-      showMessage('Supplier name is required', 'error');
+      setMessage({ text: "Supplier name is required", type: "error" });
       return false;
     }
     if (!form.contact?.trim()) {
-      showMessage('Contact number is required', 'error');
+      setMessage({ text: "Contact number is required", type: "error" });
       return false;
     }
     if (!form.address?.trim()) {
-      showMessage('Address is required', 'error');
+      setMessage({ text: "Address is required", type: "error" });
       return false;
     }
 
@@ -110,7 +98,10 @@ function EditSupplier() {
     // Contact validation (basic phone number check)
     const contactRegex = /^[\d\-\+\(\)\s]+$/;
     if (!contactRegex.test(form.contact)) {
-      showMessage('Please enter a valid contact number', 'error');
+      setMessage({
+        text: "Please enter a valid contact number",
+        type: "error",
+      });
       return false;
     }
 
@@ -129,143 +120,293 @@ function EditSupplier() {
       return;
     }
 
-    setLoadingStates(prev => ({ ...prev, updating: true }));
+    setLoadingStates((prev) => ({ ...prev, updating: true }));
 
     try {
       await axiosInstance.put(`/supplier/${id}`, form);
-      showMessage('Supplier updated successfully!', 'success');
-
-      // Navigate after a short delay to show success message
-      setTimeout(() => {
-        navigate(`/supplier-profile/${id}`);
-      }, 1500);
+      navigate(`/supplier-profile/${id}`);
     } catch (err) {
-      const errorMessage = err.response?.data?.msg ||
+      const errorMessage =
+        err.response?.data?.msg ||
         err.response?.data?.message ||
-        'Failed to update supplier. Please try again.';
-      showMessage(errorMessage, 'error');
+        "Failed to update supplier. Please try again.";
+      setMessage({ text: errorMessage, type: "error" });
     } finally {
-      setLoadingStates(prev => ({ ...prev, updating: false }));
+      setLoadingStates((prev) => ({ ...prev, updating: false }));
     }
   };
 
   return (
-    <div className={`max-w-[500px] w-screen min-h-screen mx-auto p-4 flex flex-col items-center transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-900' : 'bg-neutral-200'}`}>
-      {/* Loading overlay for initial data fetch */}
-      {loadingStates.fetchingSupplier && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className={`p-6 rounded-lg flex items-center gap-3 transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-900'}`}>
-            <AiOutlineLoading3Quarters className="animate-spin text-blue-500 text-xl" />
-            <span>Loading supplier data...</span>
-          </div>
-        </div>
-      )}
-
-      {/* Message display */}
-      {message.text && (
-        <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-40 px-6 py-3 rounded-lg shadow-lg transition-all duration-300 ${message.type === 'success'
-          ? theme === 'dark'
-            ? 'bg-green-900 text-green-200 border border-green-700'
-            : 'bg-green-500 text-white'
-          : message.type === 'error'
-            ? theme === 'dark'
-              ? 'bg-red-900 text-red-200 border border-red-700'
-              : 'bg-red-500 text-white'
-            : theme === 'dark'
-              ? 'bg-blue-900 text-blue-200 border border-blue-700'
-              : 'bg-blue-500 text-white'
-          }`}>
-          {message.text}
-        </div>
-      )}
-
-      <div className={`shadow-md rounded-xl mt-8 w-full flex flex-col p-6 gap-4 transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
-        <h2 className={`text-2xl font-bold text-center mb-4 transition-colors duration-200 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>Edit Supplier</h2>
-
-        <form onSubmit={handleUpdate} className="space-y-4">
-          {/* Supplier Name Field */}
-          <div className='flex flex-col gap-2'>
-            <label className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Supplier Name <span className="text-red-500">*</span></label>
+    <div
+      className={`
+            max-w-[500px] w-screen min-h-screen mx-auto 
+            py-16 px-4 relative
+            transition-colors duration-200
+            ${theme === "dark" ? "bg-gray-900" : "bg-white"}
+         `}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        className={`
+                  rounded-md px-4 mt-6 py-2 mb-3
+                  transition-colors duration-200  text-[10px]
+                  ${
+                    theme === "dark"
+                      ? "bg-gray-800"
+                      : "bg-gray-100 border text-gray-800 border-gray-200"
+                  }
+                  shadow-md
+               `}
+      >
+        <li>
+          Update the fields below and click 'Update' to securely save your
+          changes.
+        </li>
+      </motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        className={`
+                  rounded-md px-4 py-2 mb-3
+                  transition-colors duration-200 text-[10px]
+                  ${
+                    theme === "dark"
+                      ? "bg-gray-800"
+                      : "bg-gray-100 border text-gray-800 border-gray-200"
+                  }
+                  shadow-md
+               `}
+      >
+        <li>
+          Please complete all required fields (those without the 'Optional' tag)
+          to proceed.
+        </li>
+      </motion.div>
+      {/* Form Container */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        className={`
+            rounded-lg p-6 mb-4
+            transition-colors duration-200
+            ${
+              theme === "dark"
+                ? "bg-gray-800"
+                : "bg-gray-100 border border-gray-200"
+            }
+            shadow-md
+         `}
+      >
+        {/* Form Fields */}
+        <div className="space-y-4">
+          {/* Name Field */}
+          <div>
+            <label
+              className={`text-xs font-semibold opacity-70 mb-2 ml-2 block
+                     ${theme === "dark" ? "text-gray-300" : "text-gray-900"}
+                  `}
+            >
+              Enter Supplier Name
+            </label>
             <input
-              value={form.name}
-              onChange={e => setForm({ ...form, name: e.target.value })}
-              className={`border p-3 rounded-md outline-none focus:ring-1 transition-colors duration-200 ${theme === 'dark'
-                ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400'
-                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500'
-                }`}
               type="text"
-              placeholder="Enter supplier name"
-              disabled={loadingStates.updating || loadingStates.fetchingSupplier}
-              required
+              value={form.name}
+              placeholder="e.g. sh enterprise"
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className={`
+                        w-full p-3 rounded-lg text-xs
+                        outline-none transition-colors duration-200
+                        ${
+                          theme === "dark"
+                            ? "bg-gray-700 text-gray-100 placeholder-gray-500"
+                            : "bg-white border border-gray-300 text-gray-900 placeholder-gray-500"
+                        }
+                     `}
             />
           </div>
-
-          {/* Contact Field */}
-          <div className='flex flex-col gap-2'>
-            <label className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Contact Number <span className="text-red-500">*</span></label>
+          <div>
+            <label
+              className={`text-xs font-semibold opacity-70 mb-2 ml-2 block
+                     ${theme === "dark" ? "text-gray-300" : "text-gray-900"}
+                  `}
+            >
+              Phone Number (Optional)
+            </label>
             <input
+              type="number"
               value={form.contact}
-              onChange={e => setForm({ ...form, contact: e.target.value })}
-              className={`border p-3 rounded-md outline-none focus:ring-1 transition-colors duration-200 ${theme === 'dark'
-                ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400'
-                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500'
-                }`}
-              type="tel"
-              placeholder="Enter contact number"
-              disabled={loadingStates.updating || loadingStates.fetchingSupplier}
-              required
+              placeholder="e.g. +123456789"
+              onChange={(e) => setForm({ ...form, contact: e.target.value })}
+              className={`
+                        w-full p-3 rounded-lg text-xs
+                        outline-none transition-colors duration-200
+                        ${
+                          theme === "dark"
+                            ? "bg-gray-700 text-gray-100 placeholder-gray-500"
+                            : "bg-white border border-gray-300 text-gray-900 placeholder-gray-500"
+                        }
+                     `}
             />
           </div>
-
-          {/* Address Field */}
-          <div className='flex flex-col gap-2'>
-            <label className={`font-medium transition-colors duration-200 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Address <span className="text-red-500">*</span></label>
-            <textarea
+          <div>
+            <label
+              className={`text-xs font-semibold opacity-70 mb-2 ml-2 block
+                     ${theme === "dark" ? "text-gray-300" : "text-gray-900"}
+                  `}
+            >
+              Address (Optional)
+            </label>
+            <input
+              type="text"
               value={form.address}
-              onChange={e => setForm({ ...form, address: e.target.value })}
-              className={`border p-3 rounded-md outline-none focus:ring-1 transition-colors duration-200 resize-vertical min-h-[80px] ${theme === 'dark'
-                ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400'
-                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500'
-                }`}
-              placeholder="Enter complete address"
-              disabled={loadingStates.updating || loadingStates.fetchingSupplier}
-              required
+              placeholder="e.g. 123 Main St"
+              onChange={(e) => setForm({ ...form, address: e.target.value })}
+              className={`
+                        w-full p-3 rounded-lg text-xs
+                        outline-none transition-colors duration-200
+                        ${
+                          theme === "dark"
+                            ? "bg-gray-700 text-gray-100 placeholder-gray-500"
+                            : "bg-white border border-gray-300 text-gray-900 placeholder-gray-500"
+                        }
+                     `}
             />
           </div>
+        </div>
 
-          
-        </form>
-      </div>
+        {/* Action Buttons */}
+      </motion.div>
 
-      {/* Action Buttons */}
-      <div className='flex gap-4 mt-6 w-full'>
-        <Link
-          to={`/supplier-profile/${id}`}
-          className={`flex-1 px-6 py-3 rounded-md text-center transition-colors duration-200 ${theme === 'dark' ? 'bg-gray-600 hover:bg-gray-500 text-gray-200' : 'bg-gray-500 hover:bg-gray-600 text-white'}`}
+      {/* Success/Error Popup */}
+      {message.text && (
+        <Popup onClose={() => updateState({ message: { type: "", text: "" } })}>
+          <div
+            className={`
+                  w-full rounded-lg px-4 pt-8 pb-4
+                  flex flex-col items-center gap-6
+                  ${theme === "dark" ? "bg-gray-800" : "bg-white"}
+                  shadow-xl border
+                  ${theme === "dark" ? "border-gray-700" : "border-gray-200"}
+               `}
+          >
+            <div
+              className={`
+                     w-12 h-12 rounded-full
+                     flex items-center justify-center
+                     ${theme === "dark" ? "bg-red-500/10" : "bg-red-50"}
+                  `}
+            >
+              <BiError
+                className={`text-2xl ${
+                  theme === "dark" ? "text-red-400" : "text-red-500"
+                }`}
+              />
+            </div>
+
+            <p
+              className={`text-center text-xs ${
+                theme === "dark" ? "text-red-400" : "text-red-600"
+              }`}
+            >
+              {message.text}
+            </p>
+
+            <div className="flex gap-3 w-full">
+              <button
+                onClick={() => setMessage({ type: "", text: "" })}
+                className={`
+                           flex-1 py-2.5 rounded-md
+                           text-[10px] font-medium
+                           transition-colors duration-200
+                           hover:scale-[0.98] active:scale-[0.97]
+      
+      ${
+        theme === "dark"
+          ? "text-red-400 bg-red-500/10"
+          : "text-red-600 bg-red-500/10"
+      }
+      
+                        `}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </Popup>
+      )}
+      <div
+        className={`
+          fixed left-1/2 -translate-x-1/2
+          w-[90%] rounded-md max-w-md 
+          px-6 py-3
+          flex items-center gap-2 z-50 
+          transition-all duration-500
+          backdrop-blur-sm shadow-inner
+          ${form.name ? " bottom-2" : "-bottom-32"}  ${
+          theme === "dark"
+            ? "bg-gray-800/90 border-gray-700"
+            : "bg-gray-100 border border-gray-200"
+        }
+        `}
+      >
+        <button
+          onClick={() => navigate(-1)}
+          className={`
+      w-full p-3 rounded-lg
+      text-xs font-medium
+      transition-all duration-200
+      flex items-center justify-center gap-2
+      hover:scale-[0.98] active:scale-[0.97]
+      ${
+        theme === "dark"
+          ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+          : "bg-white border border-gray-300 text-gray-600"
+      }
+    `}
         >
-          Cancel
-        </Link>
+          <IoArrowUndoOutline className="text-base" />
+          <span>Discard</span>
+        </button>
 
         <button
           onClick={handleUpdate}
-          disabled={loadingStates.updating || loadingStates.fetchingSupplier}
-          className={`flex-1 px-6 py-3 rounded-md transition-colors duration-200 flex items-center justify-center gap-2 ${loadingStates.updating || loadingStates.fetchingSupplier
-            ? 'bg-blue-300 cursor-not-allowed'
-            : 'bg-blue-500 hover:bg-blue-600 cursor-pointer'
-            } text-white`}
+          disabled={loadingStates.updating}
+          className={`
+      w-full p-3 rounded-lg
+      flex items-center justify-center gap-2
+      text-xs font-medium
+      transition-all duration-200
+      hover:scale-[0.98] active:scale-[0.97]
+      disabled:opacity-60 
+      disabled:cursor-not-allowed 
+      disabled:hover:scale-100
+      ${
+        loadingStates.updating
+          ? theme === "dark"
+            ? "bg-gray-700 text-gray-500"
+            : "bg-gray-100 text-gray-400"
+          : theme === "dark"
+          ? "bg-green-500/20 text-green-400 hover:bg-green-500/30"
+          : "bg-green-500 text-white hover:bg-green-600"
+      }
+    `}
         >
           {loadingStates.updating ? (
-            <>
-              <AiOutlineLoading3Quarters className="animate-spin" />
-              Saving...
-            </>
+            <AiOutlineLoading3Quarters className="animate-spin text-base" />
           ) : (
-            'Save Changes'
+            <>
+              <MdOutlineSave className="text-base" />
+              <span>Update</span>
+            </>
           )}
         </button>
       </div>
     </div>
-  )
+  );
 }
 
-export default EditSupplier
+export default EditSupplier;

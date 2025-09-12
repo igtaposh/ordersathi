@@ -51,11 +51,11 @@ const Layout = () => {
       location === `/user-profile` || location === `/edit-user` || location === `/edit-product/${id}` || location === `/edit-supplier/${id}` ? null : (
         <div
           className={`${
-            isScrollingUp ? "bottom-0" : "-bottom-16"
+            isScrollingUp ? "bottom-0" : "-bottom-20"
           } fixed  max-w-[500px] w-full flex justify-between items-center px-4 py-2 z-50 transition-all duration-500   ${
             theme === "dark"
               ? "bg-gray-800 border-t border-gray-700"
-              : "bg-white border-t-4 border-gray-200"
+              : "bg-white border-t-2 border-gray-900/20"
           }`}
         >
           <Link to="/">

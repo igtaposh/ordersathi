@@ -1,13 +1,13 @@
 import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FiEdit, FiLogOut, FiTrash2 } from "react-icons/fi";
+import { FiLogOut, FiTrash2 } from "react-icons/fi";
 import { CiEdit } from "react-icons/ci";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { AuthContext } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import axiosInstance, { setAuthToken } from "../api/axiosInstance";
-import { IoArrowBack, IoCameraOutline } from "react-icons/io5";
+import { IoCameraOutline } from "react-icons/io5";
 
 function UserProfile() {
   // Context hooks
@@ -15,132 +15,14 @@ function UserProfile() {
   const navigate = useNavigate();
   const { theme } = useTheme();
 
-  // Form state
-  const [editMode, setEditMode] = useState(false);
-  const [form, setForm] = useState({
-    userName: user?.name || "",
-    email: user?.email || "",
-    phone: user?.phone || "",
-    shopName: user?.shopName || "",
-  });
-
   // Loading states for different actions
   const [loadingStates, setLoadingStates] = useState({
-    updating: false,
     deleting: false,
     logout: false,
   });
 
   // Message state for success/error feedback
   const [message, setMessage] = useState({ type: "", text: "" });
-  
-  /**
-   * Handles profile update
-   * @param {Event} e - Form submit event
-   */
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-
-    // Validation
-    if (!form.userName.trim()) {
-      setMessage({ type: "error", text: "User name is required" });
-      return;
-    }
-
-    setLoadingStates((prev) => ({ ...prev, updating: true }));
-    setMessage({ type: "", text: "" }); // Clear any existing messages
-
-    try {
-      const res = await axiosInstance.put("/auth/update-profile", form);
-      setUser(res.data.user);
-      setEditMode(false);
-      setMessage({ type: "success", text: "Profile updated successfully!" });
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.msg ||
-        "Failed to update profile. Please try again.";
-      setMessage({ type: "error", text: errorMessage });
-    } finally {
-      setLoadingStates((prev) => ({ ...prev, updating: false }));
-    }
-  };
-
-  /**
-   * Handles account deletion with confirmation
-   */
-  const handleDelete = async () => {
-    // Confirmation dialog
-    if (
-      !window.confirm(
-        "Are you sure you want to delete your account? This action cannot be undone."
-      )
-    ) {
-      return;
-    }
-
-    setLoadingStates((prev) => ({ ...prev, deleting: true }));
-    setMessage({ type: "", text: "" }); // Clear any existing messages
-
-    try {
-      await axiosInstance.delete("/auth/delete-account");
-
-      // Clear user data
-      setUser(null);
-      setToken(null);
-      setAuthToken(null);
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-
-      setMessage({
-        type: "success",
-        text: "Account deleted successfully. Redirecting...",
-      });
-
-      // Small delay before navigation to show success message
-      setTimeout(() => {
-        navigate("/register");
-      }, 2000);
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.msg ||
-        "Failed to delete account. Please try again.";
-      setMessage({ type: "error", text: errorMessage });
-    } finally {
-      setLoadingStates((prev) => ({ ...prev, deleting: false }));
-    }
-  };
-  /**
-   * Handles user logout
-   */
-  const handleLogout = async () => {
-    setLoadingStates((prev) => ({ ...prev, logout: true }));
-    setMessage({ type: "", text: "" }); // Clear any existing messages
-
-    try {
-      const res = await axiosInstance.post("/auth/logout");
-      if (res.status === 200) {
-        // Clear user data
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        setAuthToken(null);
-        setUser(null);
-        setToken(null);
-
-        setMessage({
-          type: "success",
-          text: "Logged out successfully. Redirecting...",
-        });
-
-        navigate("/login");
-      }
-    } catch (error) {
-      const errorMessage =
-        error.response?.data?.msg || "Logout failed. Please try again.";
-      setMessage({ type: "error", text: errorMessage });
-    } finally {
-      setLoadingStates((prev) => ({ ...prev, logout: false }));
-    }
-  };
 
   return (
     <motion.div
@@ -282,59 +164,7 @@ function UserProfile() {
               ))}
             </div>
 
-            {/* Action Buttons */}
-            <div className="mt-8 flex flex-col gap-2">
-              <button
-                onClick={handleLogout}
-                disabled={loadingStates.logout}
-                className={`
-                  py-3 px-4 rounded-xl
-                  flex items-center justify-center gap-2
-                  font-medium text-sm
-                  transition-all duration-200
-                  ${
-                    theme === "dark"
-                      ? "bg-purple-500/20 text-purple-400 hover:bg-purple-500/30"
-                      : "bg-purple-100 text-purple-600 hover:bg-purple-200"
-                  }
-                `}
-              >
-                {loadingStates.logout ? (
-                  <AiOutlineLoading3Quarters className="animate-spin" />
-                ) : (
-                  <FiLogOut />
-                )}
-                <span>
-                  {loadingStates.logout ? "Logging out..." : "Logout"}
-                </span>
-              </button>
-
-              <button
-                onClick={handleDelete}
-                disabled={loadingStates.deleting}
-                className={`
-                  py-3 px-4 rounded-xl
-                  flex items-center justify-center gap-2
-                  font-medium text-sm
-                  transition-all duration-200
-                  ${
-                    theme === "dark"
-                      ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
-                      : "bg-red-100 text-red-600 hover:bg-red-200"
-                  }
-                  ${loadingStates.deleting && "opacity-50 cursor-not-allowed"}
-                `}
-              >
-                {loadingStates.deleting ? (
-                  <AiOutlineLoading3Quarters className="animate-spin" />
-                ) : (
-                  <FiTrash2 />
-                )}
-                <span>
-                  {loadingStates.deleting ? "Deleting..." : "Delete Account"}
-                </span>
-              </button>
-            </div>
+            
           </div>
         </motion.div>
       </div>

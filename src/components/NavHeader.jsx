@@ -3,46 +3,53 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { IoArrowBack } from "react-icons/io5";
+import { scroll, scrollInfo } from "framer-motion";
 
 function NavHeader() {
   // Use React Router hooks for better navigation handling
   const navigate = useNavigate();
   const { theme } = useTheme();
   const location = window.location.pathname;
+  const [isScrollingUp, setIsScrollingUp] = useState(false);
   const { id } = useParams();
 
   const goBack = () => {
-    location === '/products' || location === '/suppliers' ? navigate('/') : navigate(-1)
-    
+    location === "/products" || location === "/suppliers"
+      ? navigate("/")
+      : navigate(-1);
   };
-  const [scrollPosition, setScrollPosition] = useState(0);
+
   useEffect(() => {
-    const onScroll = () => {
-      const scrollTop = window.scrollY || document.documentElement.scrollTop;
-      setScrollPosition(scrollTop);
+    let lastScrollY = window.scrollY;
+
+    const handleScroll = () => {
+      // const currentScrollY = window.scrollY;
+      // const isScrollingUp = currentScrollY < lastScrollY;
+
+      // setIsScrollingUp(isScrollingUp);
+      // lastScrollY = currentScrollY;
+      if (window.scrollY > 10) {
+        setIsScrollingUp(true);
+      } else {
+        setIsScrollingUp(false);
+      }
     };
 
-    window.addEventListener("scroll", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-    };
-  }, [setScrollPosition]);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <div
-      className={`fixed z-[100] w-full max-w-[500px] flex top-0 justify-start items-center p-2 ${
-        location === "/user-profile"
-          ? null
-          : scrollPosition >= 35
-          ? `duration-100 ease-in shadow-md ${
-              theme === "dark"
-                ? "border-b-2 bg-gray-900 border-b-gray-800"
-                : "border-b-2 bg-white border-b-gray-300 "
+      className={`fixed z-[100] w-full max-w-[500px] justify-start items-center p-2 duration-300 transition-all top-0 ${
+        isScrollingUp
+          ? `top-0 flex shadow-md ${
+              theme === "dark" ? "bg-gray-800" : "bg-white "
             }`
-          : "transition-none duration-0 shadow--none"
-      }`}
+          : ""
+      } `}
     >
-      <div className="w-full flex justify-start items-center gap-4 p-1 sm:gap-3 md:gap-4">
+      <div className="w-full flex justify-between items-center gap-4 px-2 py-1 ">
         <button
           onClick={() => goBack()}
           className={`p-2 rounded-full ${
@@ -51,10 +58,10 @@ function NavHeader() {
               : "bg-gray-100 border border-gray-200 text-gray-700"
           } backdrop-blur-sm`}
         >
-          <IoArrowBack size={18} />
+          <IoArrowBack size={20} />
         </button>
         <p
-          className={`text-xs opacity-70 tracking-wider font-medium ${
+          className={`text-sm opacity-70 tracking-wider font-medium ${
             theme === "dark" ? "text-gray-200" : "text-black"
           }`}
         >
@@ -73,6 +80,7 @@ function NavHeader() {
             (location === `/edit-product/${id}` && "Update Product") ||
             (location === "/edit-user" && "Update User")}
         </p>
+        <div className="w-16"></div>
       </div>
     </div>
   );

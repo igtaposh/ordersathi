@@ -96,11 +96,11 @@ const Dashboard = () => {
   return (
     <motion.div
       className={`w-full min-h-screen transition-colors duration-200 ${
-        theme === "dark" ? "bg-gray-800" : "bg-white"
+        theme === "dark" ? "bg-gray-800" : "bg-gray-50"
       }`}
     >
       <div
-        className={`max-w-[500px] w-full flex items-center justify-start p-4 fixed top-0 z-[60]  ${
+        className={`max-w-[500px] w-full flex items-center justify-start py-3 px-4 fixed top-0 z-[60]  ${
           scrollPosition >= 135
             ? `shadow-md transition-all duration-300 ${
                 theme === "dark" ? "bg-gray-900" : "bg-white"
@@ -110,7 +110,9 @@ const Dashboard = () => {
       >
         <Link to={"/profile"} className="w-full flex items-center ">
           <img
-            className={`h-6 w-6 rounded-full  ${theme === "dark" ? "bg-gray-800" : "bg-gray-200"}`}
+            className={`h-8 w-8 rounded-full  ${
+              theme === "dark" ? "bg-gray-800 border border-gray-300/80" : "bg-gray-200 border border-gray-900/80"
+            }`}
             src="https://avatar.iran.liara.run/public"
             alt=""
           />
@@ -131,8 +133,8 @@ const Dashboard = () => {
         <div className="w-full flex items-center justify-between gap-2">
           <Link
             to={"/create-product"}
-            className={`w-full flex flex-col gap-2 p-2 items-center justify-center text-center rounded-lg scale-90 ${
-              theme === "dark" ? "bg-gray-800" : "text-gray-900 bg-gray-200"
+            className={`w-full min-h-[100px] flex flex-col gap-2 p-2 items-center justify-center text-center rounded-lg scale-90  ${
+              theme === "dark" ? "bg-gray-800" : "text-gray-900 bg-gray-200 border border-gray-900/20"
             }`}
           >
             <span
@@ -144,14 +146,16 @@ const Dashboard = () => {
                 <img src={products2} alt="" />
               </span>
             </span>
-            <p className="libre-franklin-regular text-[8px] font-mono font-medium tracking-normal">
-              Add New Product
+            <p className="libre-franklin-regular text-[10px] font-mono font-medium tracking-normal">
+              Create New Product
             </p>
           </Link>
           <Link
             to={"/create-supplier"}
-            className={`w-full flex flex-col gap-2 p-2 items-center justify-center text-center rounded-lg scale-90 ${
-              theme === "dark" ? "bg-gray-800" : "text-gray-900 bg-gray-200"
+            className={`w-full min-h-[100px] flex flex-col gap-2 p-2 items-center justify-center text-center rounded-lg scale-90 ${
+              theme === "dark"
+                ? "bg-gray-800"
+                : "text-gray-900 bg-gray-200  border border-gray-900/20"
             }`}
           >
             <span
@@ -163,14 +167,16 @@ const Dashboard = () => {
                 <img src={suppliers2} alt="" />
               </span>
             </span>
-            <p className="libre-franklin-regular text-[8px] font-mono font-medium tracking-normal">
-              Add New Supplier
+            <p className="libre-franklin-regular text-[10px] font-mono font-medium tracking-normal">
+              Create New Supplier
             </p>
           </Link>
           <Link
             to={"/create-order"}
-            className={`w-full flex flex-col gap-2 p-2 items-center justify-center text-center rounded-lg scale-90 ${
-              theme === "dark" ? "bg-gray-800" : "text-gray-900 bg-gray-200"
+            className={`w-full min-h-[100px] flex flex-col gap-2 p-2 items-center justify-center text-center rounded-lg scale-90 ${
+              theme === "dark"
+                ? "bg-gray-800"
+                : "text-gray-900 bg-gray-200 border border-gray-900/20"
             }`}
           >
             <span
@@ -182,14 +188,16 @@ const Dashboard = () => {
                 <img src={createOrder} alt="" />
               </span>
             </span>
-            <p className="media libre-franklin-regular text-[8px]  font-medium tracking-normal">
+            <p className="media libre-franklin-regular text-[10px]  font-medium tracking-normal">
               Create Order List
             </p>
           </Link>
           <Link
             to={"/create-stock-report"}
-            className={`w-full flex flex-col gap-2 p-2 items-center justify-center text-center rounded-lg scale-90 ${
-              theme === "dark" ? "bg-gray-800" : "text-gray-900 bg-gray-200"
+            className={`w-full  min-h-[100px] flex flex-col gap-2 p-2 items-center justify-center text-center rounded-lg scale-90 ${
+              theme === "dark"
+                ? "bg-gray-800"
+                : "text-gray-900 bg-gray-200 border border-gray-900/20"
             }`}
           >
             <span
@@ -201,7 +209,7 @@ const Dashboard = () => {
                 <img src={stockReport} alt="" />
               </span>
             </span>
-            <p className="libre-franklin-regular text-[8px] font-mono font-medium tracking-normal">
+            <p className="libre-franklin-regular text-[10px] font-mono font-medium tracking-normal">
               Create Stock Report
             </p>
           </Link>
@@ -212,8 +220,10 @@ const Dashboard = () => {
           }`}
         >
           <Link
-            className={`w-full h-full flex items-center justify-center text-center rounded-lg relative overflow-hidden ${
-              theme === "dark" ? "bg-gray-800" : "bg-gray-200"
+            className={`w-full h-14 flex items-center justify-center text-center rounded-lg relative overflow-hidden ${
+              theme === "dark"
+                ? "bg-gray-800"
+                : "bg-gray-200 border border-gray-900/20"
             }`}
             to={"/products"}
           >
@@ -230,8 +240,10 @@ const Dashboard = () => {
             </span>
           </Link>
           <Link
-            className={`w-full h-full flex items-center justify-center text-center rounded-lg relative overflow-hidden ${
-              theme === "dark" ? "bg-gray-800" : "bg-gray-200"
+            className={`w-full h-14 flex items-center justify-center text-center rounded-lg relative overflow-hidden ${
+              theme === "dark"
+                ? "bg-gray-800"
+                : "bg-gray-200 border border-gray-900/20"
             }`}
             to={"/suppliers"}
           >
@@ -257,7 +269,7 @@ const Dashboard = () => {
           className={`w-full p-2 rounded-md text-xs  ${
             theme === "dark"
               ? "bg-gray-800 text-gray-100"
-              : "bg-gray-200 text-gray-800"
+              : "bg-gray-200 text-gray-800 border border-gray-900/20"
           }`}
         >
           <p>About OrderSathi</p>
@@ -266,7 +278,7 @@ const Dashboard = () => {
           className={`text-xs p-2 w-full flex items-center justify-between gap-3 rounded-md ${
             theme === "dark"
               ? "bg-gray-800 text-gray-100"
-              : "bg-gray-200 text-gray-800"
+              : "bg-gray-200 text-gray-800 border border-gray-900/20"
           }`}
         >
           <p>
@@ -279,7 +291,7 @@ const Dashboard = () => {
           className={`text-xs p-2 w-full flex items-center justify-between gap-3 rounded-md ${
             theme === "dark"
               ? "bg-gray-800 text-gray-100"
-              : "bg-gray-200 text-gray-800"
+              : "bg-gray-200 text-gray-800 border border-gray-900/20"
           }`}
         >
           <ul>
@@ -294,7 +306,7 @@ const Dashboard = () => {
           className={`text-xs p-2 w-full flex items-center justify-between gap-3 rounded-md ${
             theme === "dark"
               ? "bg-gray-800 text-gray-100"
-              : "bg-gray-200 text-gray-800"
+              : "bg-gray-200 text-gray-800 border border-gray-900/20"
           }`}
         >
           <ul>
@@ -309,7 +321,7 @@ const Dashboard = () => {
           className={`text-xs p-2 w-full flex items-center justify-between gap-3 rounded-md ${
             theme === "dark"
               ? "bg-gray-800 text-gray-100"
-              : "bg-gray-200 text-gray-800"
+              : "bg-gray-200 text-gray-800 border border-gray-900/20"
           }`}
         >
           <ul>
@@ -324,7 +336,7 @@ const Dashboard = () => {
           className={`text-xs p-2 w-full flex items-center justify-between gap-3 rounded-md ${
             theme === "dark"
               ? "bg-gray-800 text-gray-100"
-              : "bg-gray-200 text-gray-800"
+              : "bg-gray-200 text-gray-800 border border-gray-900/20"
           }`}
         >
           <ul>
@@ -340,7 +352,7 @@ const Dashboard = () => {
           className={`text-xs p-2 w-full flex items-center justify-between gap-3 rounded-md ${
             theme === "dark"
               ? "bg-gray-800 text-gray-100"
-              : "bg-gray-200 text-gray-800"
+              : "bg-gray-200 text-gray-800 border border-gray-900/20"
           }`}
         >
           <ul>

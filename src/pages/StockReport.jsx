@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axiosInstance from "../api/axiosInstance";
 import { SupplierContext } from "../context/SupplierContext";
 import { ProductContext } from "../context/ProductContext";
+import { OrderContext } from "../context/OrderContext";
 import { useTheme } from "../context/ThemeContext";
 import { RiAiGenerate } from "react-icons/ri";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
@@ -13,6 +14,7 @@ import Search from "../components/Search";
 import Popup from "../components/Popup";
 import { IoMdDownload } from "react-icons/io";
 import { motion } from "framer-motion";
+import { StockReportContext } from "../context/StockReport";
 
 const StockReport = () => {
   const { theme } = useTheme();
@@ -21,6 +23,14 @@ const StockReport = () => {
   // Context hooks
   const { suppliers, setSuppliers } = useContext(SupplierContext);
   const { products, setProducts } = useContext(ProductContext);
+  const { orders, setOrders } = useContext(OrderContext);
+  const { stockReport, setStockReport } = useContext(StockReportContext);
+
+  function formatDate() {
+    const data = new Date(stockReport.createdAt);
+    const options = { day: "2-digit", month: "short", year: "numeric" };
+    return data.toLocaleDateString("en-GB", options).replace(/ /g, "-");
+  }
 
   const getRandomColor = (seed) => {
     const colors = [
@@ -68,6 +78,7 @@ const StockReport = () => {
     message: { type: "", text: "" },
     showSupplierPopup: true,
     selectedSupplier: "",
+    supplierName: "",
     searchQuery: "",
     activeFilters: [],
     isScrollingUp: false,
@@ -87,6 +98,7 @@ const StockReport = () => {
     isPopupOpen,
     showSupplierList,
     isScrollingUp,
+    supplierName,
   } = orderState;
 
   // Memoized state updates
@@ -99,6 +111,7 @@ const StockReport = () => {
     const fetchSuppliers = async () => {
       try {
         const res = await axiosInstance.get("/supplier");
+
         if (res.status === 200) {
           setSuppliers(res.data);
         }
@@ -119,6 +132,10 @@ const StockReport = () => {
     try {
       updateOrderState({
         selectedSupplier: supplierId,
+        supplierName: suppliers
+          .find((p) => p._id === supplierId)
+          .name.replace(/\s+/g, "-")
+          .toUpperCase(),
         searchQuery: "",
         activeFilters: [],
         quantities: {},
@@ -221,7 +238,8 @@ const StockReport = () => {
         supplierId: selectedSupplier,
         products: productsToSend,
       });
-
+      setStockReport(res.data.stockReport);
+      console.log(orders);
       updateOrderState({
         orderId: res.data.stockReport._id,
         message: {
@@ -263,7 +281,12 @@ const StockReport = () => {
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `stock-report-${orderId}.pdf`);
+      link.setAttribute(
+        "download",
+        `${
+          orderState.supplierName
+        }-STOCK-REPORT-${formatDate().toUpperCase()}.pdf`
+      );
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -306,7 +329,7 @@ const StockReport = () => {
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: -20, opacity: 0 }}
       className={`max-w-[500px] w-screen min-h-screen mx-auto py-2 px-4 relative transition-colors duration-200 ${
-        theme === "dark" ? "bg-gray-900" : "bg-zinc-200"
+        theme === "dark" ? "bg-gray-900" : "bg-gray-50"
       }`}
     >
       {/* Supplier Selection Popup */}
@@ -374,7 +397,9 @@ const StockReport = () => {
                 }}
                 className={`p-2 cursor-pointer flex items-center justify-between transition-all duration-200 ${
                   showSupplierList
-                    ? "rounded-none border-b-2 border-gray-600 pb-4"
+                    ? theme === "dark"
+                      ? "rounded-none border-b-2 border-gray-600 pb-4"
+                      : "rounded-none border-b-2 border-gray-200 pb-4"
                     : "border-none pb-0 rounded-lg"
                 }`}
               >
@@ -532,10 +557,10 @@ const StockReport = () => {
                 <div
                   key={p._id}
                   className={`p-2 w-full flex
-            transition-colors gap-1  duration-200 border rounded-md items-center ${
+            transition-colors gap-1  duration-200 border rounded-lg items-center ${
               theme === "dark"
                 ? "bg-gray-800 border-gray-700 text-gray-200"
-                : "bg-gray-50 border-gray-200 text-gray-800"
+                : "bg-white border-gray-900/20 text-gray-800"
             } `}
                 >
                   <Link
@@ -591,8 +616,8 @@ const StockReport = () => {
                 transition-colors duration-200
                 ${
                   theme === "dark"
-                    ? "bg-gray-600 border-gray-500 text-gray-100 focus:border-blue-400"
-                    : "bg-white border-gray-300 text-gray-900 focus:border-blue-500"
+                    ? "bg-gray-600 border-gray-500 text-gray-100 "
+                    : "bg-white border-gray-900/20 text-gray-900 "
                 }
               `}
                       disabled={isCreatingReport}
@@ -751,17 +776,23 @@ const StockReport = () => {
               onClick={() =>
                 updateOrderState({ message: { type: "", text: "" } })
               }
-              className={`
-                w-full py-2.5 rounded-lg
-                flex items-center justify-center
-                text-sm font-medium
-                transition-all duration-200
-                ${
-                  theme === "dark"
-                    ? "bg-gray-700 text-gray-400 hover:bg-gray-600"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }
-              `}
+              className={`w-full
+                           flex-1 py-2.5 rounded-md
+                           text-[10px] font-medium
+                           transition-colors duration-200
+                           hover:scale-[0.98] active:scale-[0.97]
+      
+      ${
+        message.type === "success"
+          ? theme === "dark"
+            ? "text-green-400 bg-green-500/20"
+            : "text-green-600 bg-green-500/20"
+          : theme === "dark"
+          ? "text-red-400 bg-red-500/10"
+          : "text-red-600 bg-red-500/10"
+      }
+      
+                        `}
             >
               Close
             </button>

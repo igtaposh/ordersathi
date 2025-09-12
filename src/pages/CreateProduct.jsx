@@ -150,19 +150,18 @@ function CreateProduct() {
             max-w-[500px] w-screen min-h-screen mx-auto 
             py-16 px-4 relative
             transition-colors duration-200
-            ${theme === "dark" ? "bg-gray-900" : "bg-white"}
+            ${theme === "dark" ? "bg-gray-900" : "bg-gray-50"}
          `}
     >
       <div
         className={`
             rounded-md px-4 mt-6 py-2 mb-3
-            transition-colors duration-200  text-[10px]
+            transition-colors duration-200 text-[10px] shadow-sm
             ${
               theme === "dark"
                 ? "bg-gray-800"
-                : "bg-gray-100 border text-gray-800 border-gray-200"
+                : "bg-white border text-gray-700 border-gray-900/20"
             }
-            shadow-md
          `}
       >
         <li>
@@ -177,9 +176,9 @@ function CreateProduct() {
             ${
               theme === "dark"
                 ? "bg-gray-800"
-                : "bg-gray-100 border text-gray-800 border-gray-200"
+                : "bg-white border text-gray-700 border-gray-900/20"
             }
-            shadow-md
+            shadow-sm
          `}
       >
         <li>
@@ -195,9 +194,9 @@ function CreateProduct() {
             ${
               theme === "dark"
                 ? "bg-gray-800"
-                : "bg-gray-100 border border-gray-200"
+                : "bg-white border border-gray-900/20"
             }
-            shadow-md
+            shadow-sm
          `}
       >
         {/* Form Fields */}
@@ -538,15 +537,14 @@ function CreateProduct() {
         <div
           className={`
           fixed left-1/2 -translate-x-1/2
-          w-[90%] rounded-md max-w-md 
+          w-[92%] rounded-md max-w-md 
           px-6 py-3
           flex items-center gap-2 z-50 
-          transition-all duration-500
-          backdrop-blur-sm shadow-inner
+          transition-all duration-500 
           ${form.mrp && form.rate && form.weight && form.name && form.supplierId && form.type ? " bottom-2" : "-bottom-32"}  ${
             theme === "dark"
               ? "bg-gray-800/90 border-gray-700"
-              : "bg-gray-100 border border-gray-200"
+              : "bg-white border border-gray-900/20"
           }
         `}
         >
@@ -561,7 +559,7 @@ function CreateProduct() {
       ${
         theme === "dark"
           ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-          : "bg-white border border-gray-300 text-gray-600"
+          : "bg-gray-50 border border-gray-900/20 text-gray-600"
       }
     `}
           >

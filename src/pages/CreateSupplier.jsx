@@ -87,7 +87,7 @@ function CreateSupplier() {
             max-w-[500px] w-screen min-h-screen mx-auto 
             py-16 px-4 relative
             transition-colors duration-200
-            ${theme === "dark" ? "bg-gray-900" : "bg-white"}
+            ${theme === "dark" ? "bg-gray-900" : "bg-gray-50"}
          `}
     >
       <motion.div
@@ -100,9 +100,9 @@ function CreateSupplier() {
             ${
               theme === "dark"
                 ? "bg-gray-800"
-                : "bg-gray-100 border text-gray-800 border-gray-200"
+                : "bg-white border text-gray-700 border-gray-900/20"
             }
-            shadow-md
+            shadow-sm
          `}
       >
         <li>
@@ -120,9 +120,9 @@ function CreateSupplier() {
             ${
               theme === "dark"
                 ? "bg-gray-800"
-                : "bg-gray-100 border text-gray-800 border-gray-200"
+                : "bg-white border text-gray-700 border-gray-900/20"
             }
-            shadow-md
+            shadow-sm
          `}
       >
         <li>
@@ -142,9 +142,9 @@ function CreateSupplier() {
             ${
               theme === "dark"
                 ? "bg-gray-800"
-                : "bg-gray-100 border border-gray-200"
+                : "bg-white border border-gray-900/20"
             }
-            shadow-md
+            shadow-sm
          `}
       >
         {/* Form Fields */}
@@ -229,15 +229,14 @@ function CreateSupplier() {
       <div
         className={`
           fixed left-1/2 -translate-x-1/2
-          w-[90%] rounded-md max-w-md 
+          w-[92%] rounded-md max-w-md 
           px-6 py-3
           flex items-center gap-2 z-50 
           transition-all duration-500
-          backdrop-blur-sm
           ${form.name ? " bottom-2" : "-bottom-32"}  ${
           theme === "dark"
             ? "bg-gray-800/90 border-gray-700"
-            : "bg-gray-100 border-2 border-gray-200"
+            : "bg-white border border-gray-900/20"
         }
         `}
       >
@@ -252,7 +251,7 @@ function CreateSupplier() {
       ${
         theme === "dark"
           ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-          : "bg-white border border-gray-300 text-gray-600"
+          : "bg-gray-50 border border-gray-300 text-gray-600"
       }
     `}
         >
@@ -300,10 +299,18 @@ function CreateSupplier() {
           <div
             className={`
                   w-full rounded-lg px-4 pt-8 pb-4
-                  flex flex-col items-center gap-6
-                  ${theme === "dark" ? "bg-gray-800" : "bg-white"}
-                  shadow-xl border
-                  ${theme === "dark" ? "border-gray-700" : "border-gray-200"}
+                  flex flex-col items-center gap-4
+                  ${
+                    message.type === "success"
+                      ? theme === "dark"
+                        ? "bg-gray-800"
+                        : "bg-gray-50 border-red-900/60 border"
+                      : theme === "dark"
+                      ? "bg-gray-800"
+                      : "bg-gray-50 border-red-900/70 border-[2px]"
+                  }
+
+                  
                `}
           >
             <div
@@ -337,11 +344,11 @@ function CreateSupplier() {
             </div>
 
             <p
-              className={`text-center text-xs ${
+              className={`text-center p-4 rounded-lg text-xs ${
                 message.type === "success"
                   ? theme === "dark"
-                    ? "text-green-400 w-[90%]"
-                    : "text-green-700 w-[90%]"
+                    ? "text-green-400"
+                    : "text-green-700 bg-white border border-gray-900/20"
                   : theme === "dark"
                   ? "text-red-400"
                   : "text-red-600"
@@ -382,8 +389,8 @@ function CreateSupplier() {
                            transition-colors duration-200
                            ${
                              theme === "dark"
-                               ? "bg-green-400/20 text-green-400 hover:bg-green-500/30"
-                               : "bg-green-400 text-white hover:bg-green-500"
+                               ? "bg-green-500/20 text-green-400"
+                               : "bg-green-500/20 text-green-600"
                            }
                         `}
                 >

@@ -7,57 +7,65 @@ import {
   MdOutlineDarkMode,
   MdKeyboardArrowDown,
   MdDeleteOutline,
+  MdOutlineClose,
 } from "react-icons/md";
-import { HiOutlineLogout, HiOutlineLightBulb } from "react-icons/hi";
+import { HiOutlineLightBulb } from "react-icons/hi";
 import { motion } from "framer-motion";
 import { FiLogOut, FiTrash2 } from "react-icons/fi";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import Popup from "../components/Popup.jsx";
+import { BiError } from "react-icons/bi";
+import axiosInstance from "../api/axiosInstance.js";
+import { setAuthToken } from "../api/axiosInstance";
 
 function NavBar() {
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
-  const { theme, toggleTheme } = useTheme();
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [otp, setOtp] = useState("");
-  const [isAppearanceOpen, setIsAppearanceOpen] = useState(false);
+  const { user, setUser, setToken } = useContext(AuthContext);
 
+  const { theme, toggleTheme } = useTheme();
+  const [otp, setOtp] = useState();
+  const [phone, setPhone] = useState();
+  const [stepTwo, setStepTwo] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [isAppearanceOpen, setIsAppearanceOpen] = useState(false);
+  const [logout, setLogout] = useState(false);
   const handleAppearanceToggle = () => {
     setIsAppearanceOpen(!isAppearanceOpen);
   };
+
+  const [message, setMessage] = useState({
+    type: "",
+    text: "",
+  });
+
   const [loadingStates, setLoadingStates] = useState({
     updating: false,
     deleting: false,
-    logout: false,
+    loading: false,
+    confirmDelete: false,
   });
 
   const handleLogout = async () => {
-    setLoadingStates((prev) => ({ ...prev, logout: true }));
     setMessage({ type: "", text: "" }); // Clear any existing messages
-
+    setLogout(true);
     try {
       const res = await axiosInstance.post("/auth/logout");
       if (res.status === 200) {
         // Clear user data
+        navigate("/login");
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         setAuthToken(null);
         setUser(null);
         setToken(null);
-
-        setMessage({
-          type: "success",
-          text: "Logged out successfully. Redirecting...",
-        });
-
-        navigate("/login");
       }
     } catch (error) {
       const errorMessage =
         error.response?.data?.msg || "Logout failed. Please try again.";
       setMessage({ type: "error", text: errorMessage });
-    } finally {
-      setLoadingStates((prev) => ({ ...prev, logout: false }));
     }
   };
+
   const getRandomColor = (seed) => {
     const colors = [
       "bg-blue-500/20 text-blue-600",
@@ -95,6 +103,112 @@ function NavBar() {
   const handleThemeToggle = () => {
     toggleTheme();
   };
+  const handleSendOtp = async () => {
+    // Clear any existing messages
+    setMessage({ type: "", text: "" });
+
+    // Validate phone number format
+    if (
+      !phone ||
+      phone.length !== 10 ||
+      !/^[6-9]\d{9}$/.test(phone) ||
+      phone !== user.phone
+    ) {
+      setMessage({
+        type: "error",
+        text: "Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9",
+      });
+      return;
+    }
+    console.log(message);
+
+    setLoading(true);
+
+    try {
+      // Send OTP request to backend
+      const response = await axiosInstance.post("/auth/send-otp", {
+        phone,
+      });
+      setStepTwo(true);
+      setLoading(false);
+      console.log(response);
+      setMessage({
+        type: "success",
+        text: `OTP successfully sent! Please check your phone ****${user?.phone.slice(
+          -4
+        )} and enter the code below.`,
+      });
+    } catch (err) {
+      // Handle API errors gracefully
+      setLoading(false);
+      const errorMessage =
+        err.response?.data?.msg ||
+        err.response?.data?.message ||
+        "Failed to send OTP. Please try again.";
+
+      setMessage({ type: "error", text: errorMessage });
+    }
+  };
+  const handleVerifyOtp = async () => {
+    setMessage({
+      type: "",
+      text: "",
+    });
+    setLoading(true);
+    try {
+      const res = await axiosInstance.post("/auth/verify-otp", {
+        phone,
+        otp,
+      });
+      HandleDeleteAccount();
+    } catch (err) {
+      console.log(err);
+      setMessage({
+        type: "error",
+        text:
+          err.response?.data?.msg ||
+          err.response?.data?.message ||
+          "Failed to send OTP. Please try again.",
+      });
+      setLoading(false);
+    }
+  };
+
+  const HandleDeleteAccount = async () => {
+    setMessage({
+      type: "",
+      text: "",
+    });
+    setLoadingStates({
+      loading: true,
+    });
+    try {
+      const res = await axiosInstance.delete("/auth/delete-account");
+      // Clear user data
+      setMessage({
+        type: "success",
+        text: res.data.msg || "Account Deleted Successfully !",
+      });
+      setUser(null);
+      setToken(null);
+      setAuthToken(null);
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.reload();
+    } catch (err) {
+      setMessage({
+        type: "error",
+        text:
+          err.response?.data?.msg ||
+          err.response?.data?.message ||
+          "Failed to delete Account. Please try again.",
+      });
+    } finally {
+      setLoadingStates({
+        loading: false,
+      });
+    }
+  };
 
   return (
     <div
@@ -103,9 +217,11 @@ function NavBar() {
       } w-full min-h-screen max-w-[500px] flex flex-col p-4 gap-4 relative`}
     >
       <div
-        className={`w-full mt-16 flex justify-between p-4 rounded-lg shadow-sm ${
-          theme === "dark" ? "bg-gray-800" : "bg-white border border-gray-200"
-        } ${confirmDelete ? "blur-sm" : ""}`}
+        className={`w-full mt-16 flex justify-between p-4 rounded-lg shadow- ${
+          theme === "dark"
+            ? "bg-gray-800"
+            : "bg-white border border-gray-900/20"
+        } `}
       >
         <div className="w-full flex items-center gap-4">
           <Link
@@ -122,7 +238,7 @@ function NavBar() {
             className="flex flex-col gap-1 items-start justify-center"
           >
             <span
-              className={`text-xs font-medium truncate ${
+              className={`text-sm font-medium truncate ${
                 theme === "dark" ? "text-gray-200" : "text-gray-800"
               }`}
             >
@@ -149,7 +265,9 @@ function NavBar() {
 
       <div
         className={`w-full p-4 flex flex-col gap-3 shadow-sm rounded-lg ${
-          theme === "dark" ? "bg-gray-800" : "bg-white border border-gray-200"
+          theme === "dark"
+            ? "bg-gray-800"
+            : "bg-white border border-gray-900/20 "
         }`}
       >
         <h1
@@ -170,7 +288,11 @@ function NavBar() {
           <button
             onClick={handleAppearanceToggle}
             className={`flex justify-between items-center w-full p-3 text-left ${
-              isAppearanceOpen ? (theme === "dark" ? "border-b border-gray-700/50" : "border-b border-gray-200") : null
+              isAppearanceOpen
+                ? theme === "dark"
+                  ? "border-b border-gray-700/50"
+                  : "border-b border-gray-200"
+                : null
             }`}
             aria-expanded={isAppearanceOpen}
           >
@@ -274,7 +396,9 @@ function NavBar() {
 
       <div
         className={`w-full p-4 flex flex-col gap-3 shadow-sm rounded-lg ${
-          theme === "dark" ? "bg-gray-800" : "bg-white border border-gray-200"
+          theme === "dark"
+            ? "bg-gray-800"
+            : "bg-white border border-gray-900/20"
         }`}
       >
         <h1
@@ -288,7 +412,7 @@ function NavBar() {
         <div className={"flex flex-col gap-3"}>
           <button
             onClick={handleLogout}
-            disabled={loadingStates.logout}
+            disabled={logout}
             className={`
                             py-3 px-4 rounded-xl
                             flex items-center justify-center gap-2
@@ -301,15 +425,20 @@ function NavBar() {
                             }
                           `}
           >
-            {loadingStates.logout ? (
+            {logout ? (
               <AiOutlineLoading3Quarters className="animate-spin" />
             ) : (
               <FiLogOut />
             )}
-            <span>{loadingStates.logout ? "Logging out..." : "Logout"}</span>
+            <span>{logout ? "Logging out..." : "Logout"}</span>
           </button>
 
           <button
+            onClick={() => {
+              setLoadingStates({
+                confirmDelete: true,
+              });
+            }}
             className={`
                             py-3 px-4 rounded-xl
                             flex items-center justify-center gap-2
@@ -322,81 +451,168 @@ function NavBar() {
                             }
                           `}
           >
-            <FiTrash2 />
+            <MdDeleteOutline size={15} />
             Delete Account
           </button>
         </div>
       </div>
 
-      {confirmDelete && (
-        <div
-          className={`fixed left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-5/6 max-w-[450px] flex gap-4 flex-col p-6 rounded-lg shadow-xl z-50 border-2 border-yellow-400 ${
-            theme === "dark"
-              ? "bg-gray-900 text-gray-100"
-              : "bg-white text-gray-800"
-          }`}
-        >
-          <h2 className="text-lg font-medium text-center">
-            Confirm Account Deletion
-          </h2>
-          <p
-            className={`text-sm text-center ${
-              theme === "dark" ? "text-gray-300" : "text-gray-600"
+      {loadingStates.confirmDelete && (
+        <Popup>
+          <div
+            className={`relative px-6 py-8 rounded-xl flex flex-col gap-4 items-center border-2 overflow-hidden ${
+              theme === "dark"
+                ? "bg-gray-900 text-gray-100 border-gray-800"
+                : "bg-gray-50 text-gray-800"
             }`}
           >
-            To proceed with deleting your account, please enter the OTP sent to
-            your registered mobile number.
-          </p>
-          <p
-            className={`text-sm text-center ${
-              theme === "dark" ? "text-gray-300" : "text-gray-600"
-            }`}
-          >
-            This action is permanent and cannot be undone.
-          </p>
-
-          <div className="flex flex-col gap-2">
-            <label htmlFor="otp" className="text-sm font-medium">
-              Enter OTP
-            </label>
-            <input
-              maxLength={6}
-              id="otp"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              className={`h-10 p-3 rounded-lg outline-none border text-center ${
-                theme === "dark"
-                  ? "bg-gray-800 border-gray-600 text-gray-100"
-                  : "bg-gray-50 border-gray-300 text-gray-900"
-              }`}
-              placeholder="Enter 6-digit OTP"
-              type="text"
-            />
-          </div>
-
-          <div className="flex gap-3">
             <button
-              onClick={() => setConfirmDelete(false)}
-              className={`flex-1 py-2 px-4 rounded-lg transition-colors duration-200 ${
-                theme === "dark"
-                  ? "bg-gray-700 text-white hover:bg-gray-600"
-                  : "bg-gray-200 text-gray-800 hover:bg-gray-300"
-              }`}
+              onClick={() => {
+                setLoadingStates({
+                  confirmDelete: false,
+                });
+              }}
+              className="absolute top-2.5 right-2.5 text-gray-700"
             >
-              Cancel
+              <MdOutlineClose size={24} />
             </button>
-            <button className="flex-1 flex gap-2 justify-center items-center bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition-colors duration-200">
-              <MdDeleteOutline className="text-lg" />
-              Delete Account
-            </button>
+
+            <div className="w-12 h-12 flex items-center justify-center rounded-full bg-red-100 text-red-600/50">
+              <BiError size={25} />
+            </div>
+
+            <div className="flex flex-col gap-2 mb-4">
+              <h2 className="text-md font-semibold text-center">
+                Confirm Account Deletion
+              </h2>
+              <p
+                className={`text-xs text-center ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                }`}
+              >
+                To continue, please verify your identity by confirming your
+                registered mobile number. An OTP will be sent for verification.
+              </p>
+            </div>
+
+            <div
+              className={`w-full flex-col gap-4 ${
+                stepTwo ? "flex" : "hidden"
+              } `}
+            >
+              <div
+                className={`rounded-lg p-2 outline-none border text-[10px] tracking-wider placeholder:text-xs ${
+                  message.type === "success"
+                    ? "bg-green-500/20 border-green-600/60 text-green-900"
+                    : "bg-red-500/20 border-red-500/40 text-red-400"
+                }`}
+              >
+                <p className={`text-center`}>{message.text}</p>
+              </div>
+              <input
+                maxLength={6}
+                id="otp"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                className={`h-12 rounded-lg px-4 outline-none border text-sm tracking-wider text-center placeholder:text-xs ${
+                  theme === "dark"
+                    ? "bg-gray-800/60 border-gray-600/60 text-gray-100"
+                    : "bg-gray-50 border-gray-300 text-gray-900"
+                }`}
+                placeholder="Enter 6-digit OTP"
+                type="tel"
+              />
+
+              <button
+                onClick={handleVerifyOtp}
+                disabled={otp?.length !== 6}
+                className={`w-full py-2.5 rounded-lg font-medium text-xs transition flex gap-2 justify-center items-center ${
+                  otp?.length === 6
+                    ? "bg-red-100 text-red-600/50 "
+                    : "cursor-not-allowed opacity-60 bg-red-100 text-red-600/50"
+                }`}
+              >
+                {loadingStates.loading ? (
+                  <AiOutlineLoading3Quarters className="animate-spin" />
+                ) : (
+                  <MdDeleteOutline size={16} />
+                )}
+                <span>
+                  {loadingStates.loading ? "Deleting..." : "Delete Account"}
+                </span>
+              </button>
+            </div>
+
+            <div
+              className={`w-full flex-col gap-4 ${stepTwo ? "hidden" : "flex"}`}
+            >
+              {message.type === "error" ? (
+                <div
+                  className={`rounded-lg py-2 px-3 outline-none border text-[10px] tracking-wider placeholder:text-xs ${
+                    theme === "dark"
+                      ? "bg-red-500/30 border-red-500/60 text-red-300"
+                      : "bg-red-500/20 text-red-400"
+                  }`}
+                >
+                  <p className={`text-center`}>{message.text}</p>
+                </div>
+              ) : (
+                <div
+                  className={`rounded-lg p-2 outline-none border text-xs tracking-wider placeholder:text-xs ${
+                    theme === "dark"
+                      ? "bg-gray-800/60 border-gray-600/60 text-gray-100"
+                      : "bg-gray-50 border-gray-300 text-gray-900"
+                  }`}
+                >
+                  <p className={`text-center text-[10px]`}>
+                    Confirm your phone number to receive OTP
+                    <br />
+                    Your number ends with ****{user?.phone.slice(-4)}
+                  </p>
+                </div>
+              )}
+              <input
+                maxLength={10}
+                id="mobile"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className={`h-12 rounded-lg px-4 outline-none border text-xs tracking-wider text-center placeholder:text-xs ${
+                  theme === "dark"
+                    ? "bg-gray-800/60 border-gray-600/60 text-gray-100"
+                    : "bg-gray-50 border-gray-300 text-gray-900"
+                }`}
+                placeholder="Enter 10-digit mobile number"
+                type="tel"
+              />
+              <button
+                onClick={handleSendOtp}
+                disabled={phone?.length !== 10}
+                className={`w-full py-3 rounded-lg font-medium text-xs flex justify-center items-center gap-2 transition ${
+                  phone?.length === 10
+                    ? "bg-green-600/50 text-white"
+                    : "cursor-not-allowed bg-green-600/30 text-green-600 "
+                }`}
+              >
+                {loading ? (
+                  <span className="flex gap-2">
+                    <AiOutlineLoading3Quarters className="animate-spin" />
+                    Sending OTP....
+                  </span>
+                ) : (
+                  "Send OTP"
+                )}
+              </button>
+            </div>
           </div>
-        </div>
+        </Popup>
       )}
 
       <div
         className={`w-full p-4 flex flex-col gap-3 shadow-sm rounded-lg ${
-          theme === "dark" ? "bg-gray-800" : "bg-white border border-gray-200"
-        } ${confirmDelete ? "blur-sm" : ""}`}
+          theme === "dark"
+            ? "bg-gray-800"
+            : "bg-white border border-gray-900/20"
+        } `}
       >
         <h1
           className={`text-[10px] font-medium tracking-widest ${
@@ -461,9 +677,7 @@ function NavBar() {
       </div>
 
       <div
-        className={`${
-          confirmDelete ? "blur-sm" : ""
-        } text-xs text-center mt-4 mb-6 ${
+        className={`text-xs text-center mt-4 mb-6 ${
           theme === "dark" ? "text-gray-500" : "text-gray-400"
         }`}
       >

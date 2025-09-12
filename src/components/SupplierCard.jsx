@@ -43,7 +43,7 @@ const SupplierCard = ({ supplier }) => {
         ${
           theme === "dark"
             ? "bg-gray-800 border-gray-700 text-gray-200 hover:bg-gray-750"
-            : "bg-white border-gray-200 text-gray-800 hover:bg-gray-50"
+            : "bg-white border-gray-900/20 text-gray-800"
         }
       `}
     >

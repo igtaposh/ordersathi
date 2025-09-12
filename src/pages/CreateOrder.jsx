@@ -12,15 +12,15 @@ import Popup from "../components/Popup";
 import { Link, useNavigate } from "react-router-dom";
 import { GrStatusGood } from "react-icons/gr";
 import { IoMdDownload } from "react-icons/io";
-
-
+import { OrderContext } from "../context/OrderContext";
 
 const CreateOrder = () => {
   const { theme } = useTheme();
   const navigate = useNavigate();
-// Context hooks
+  // Context hooks
   const { suppliers, setSuppliers } = useContext(SupplierContext);
   const { products, setProducts } = useContext(ProductContext);
+  const { order, setOrder } = useContext(OrderContext);
   // Random pastel color generator
   const getRandomColor = (seed) => {
     const colors = [
@@ -56,7 +56,7 @@ const CreateOrder = () => {
       .toUpperCase()
       .slice(0, 2);
   };
-  
+
   // State management
   const [orderState, setOrderState] = useState({
     orderId: null,
@@ -218,7 +218,8 @@ const CreateOrder = () => {
         supplierId: selectedSupplier,
         products: productsToSend,
       });
-
+      setOrder(res.data.order);
+      console.log(order);
       updateOrderState({
         orderId: res.data.order._id,
         message: { type: "success", text: "Order created successfully!" },
@@ -237,6 +238,12 @@ const CreateOrder = () => {
       });
     }
   };
+
+  function formatDate() {
+    const data = new Date(order.createdAt);
+    const options = { day: "2-digit", month: "short", year: "numeric" };
+    return data.toLocaleDateString("en-GB", options).replace(/ /g, "-");
+  }
 
   // Handle PDF download
   const handlePDFDownload = async (type) => {
@@ -261,7 +268,15 @@ const CreateOrder = () => {
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `order-${type}-${orderId}.pdf`);
+      link.setAttribute(
+        "download",
+        `${suppliers
+          .find((s) => s._id === selectedSupplier)
+          .name.replace(/\s+/g, "-")
+          .toUpperCase()}-${
+          type === "supplier" ? "ORDER" : type.toUpperCase()
+        }-LIST-${formatDate().toUpperCase()}.pdf`
+      );
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -337,7 +352,7 @@ const CreateOrder = () => {
   return (
     <div
       className={`max-w-[500px] w-screen min-h-screen mx-auto py-2 px-4 relative transition-colors duration-200 ${
-        theme === "dark" ? "bg-gray-900" : "bg-zinc-300"
+        theme === "dark" ? "bg-gray-900" : "bg-gray-50"
       }`}
     >
       {/* Supplier Selection Popup */}
@@ -574,10 +589,10 @@ const CreateOrder = () => {
                 <div
                   key={p._id}
                   className={`p-2 w-full flex
-            transition-colors gap-1  duration-200 border rounded-md items-center ${
+            transition-colors gap-1  duration-200 border rounded-lg items-center ${
               theme === "dark"
                 ? "bg-gray-800 border-gray-700 text-gray-200"
-                : "bg-gray-50 border-gray-200 text-gray-800"
+                : "bg-white border-gray-900/20 text-gray-800"
             } `}
                 >
                   <Link
@@ -634,7 +649,7 @@ const CreateOrder = () => {
                 ${
                   theme === "dark"
                     ? "bg-gray-600 border-gray-500 text-gray-100 focus:border-blue-400"
-                    : "bg-gray-200 border-gray-300 text-gray-900 "
+                    : "bg-gray-50 border-gray-900/20 text-gray-900 "
                 }
               `}
                       disabled={isCreatingOrder}
@@ -756,17 +771,23 @@ const CreateOrder = () => {
                 onClick={() => {
                   updateOrderState({ message: { type: "", text: "" } });
                 }}
-                className={`
-                w-full py-2.5 rounded-lg
-                flex items-center justify-center gap-2
-                text-xs font-medium
-                transition-all duration-200
-                ${
-                  theme === "dark"
-                    ? "bg-gray-700 text-gray-400 hover:bg-gray-600"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }
-              `}
+                className={`w-full
+                           flex-1 py-2.5 rounded-md
+                           text-[10px] font-medium
+                           transition-colors duration-200
+                           hover:scale-[0.98] active:scale-[0.97]
+      
+      ${
+        message.type === "success"
+          ? theme === "dark"
+            ? "text-green-400 bg-green-500/20"
+            : "text-green-600 bg-green-500/20"
+          : theme === "dark"
+          ? "text-red-400 bg-red-500/10"
+          : "text-red-600 bg-red-500/10"
+      }
+      
+                        `}
               >
                 <span>Close</span>
               </button>

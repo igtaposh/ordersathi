@@ -27,25 +27,21 @@ function Popup({ children, onClose }) {
   return (
     <>
       {/* Backdrop with pointer events disabled */}
-      <motion.div
-        initial={{ right: "-100%" }}
-        animate={{ right: 0 }}
-        exit={{ right: "-100%" }}
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[999]"
+      <div
+        className="fixed inset-0 bg-zinc-900/40 z-[999]"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Popup content */}
       <motion.div
-        initial={{ right: "-100%" }}
-        animate={{ right: 0 }}
-        exit={{ right: "-100%" }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
         className={`
           fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 
           w-[90%] max-w-md z-[1000] 
           p-6 rounded-xl
-          flex flex-col items-center gap-6 
+          flex flex-col items-center gap-6
         `}
         role="dialog"
         aria-modal="true"

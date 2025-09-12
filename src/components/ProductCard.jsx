@@ -46,12 +46,12 @@ const ProductCard = ({ product }) => {
     <div
       onClick={() => navigate(`/product-profile/${product._id}`)}
       className={`
-        flex w-full justify-between rounded-md text-sm gap-2 p-2 border
-        cursor-pointer transition-all duration-200 hover:shadow-md
+        flex w-full justify-between rounded-lg text-sm gap-2 p-2 border
+        cursor-pointer transition-all duration-200 shadow-sm
         ${
           theme === "dark"
             ? "bg-gray-800 border-gray-700 text-gray-200 hover:bg-gray-750"
-            : "bg-gray-50 border-gray-200 text-gray-800 hover:bg-gray-100"
+            : "bg-white border-gray-900/20 text-gray-800"
         }
       `}
     >

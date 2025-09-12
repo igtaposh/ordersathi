@@ -123,7 +123,7 @@ const isBack = true
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 1, x: 1000 }}
       className={`max-w-[500px] w-screen min-h-screen mx-auto p-4 flex flex-col items-center transition-colors duration-200 ${
-        theme === "dark" ? "bg-gray-900" : "bg-white"
+        theme === "dark" ? "bg-gray-900" : "bg-gray-50"
       }`}
     >
       {/* Message Display */}
@@ -167,10 +167,10 @@ const isBack = true
         </div>
         {filteredProducts.length === 0 ? (
           <div
-            className={`p-6 text-xs rounded-lg text-center ${
+            className={`p-6 h-28 text-xs rounded-lg text-center items-center flex ${
               theme === "dark"
                 ? "bg-gray-750 text-gray-400"
-                : "bg-gray-100 text-gray-500"
+                : "bg-white text-gray-500 border border-gray-900/20"
             }`}
           >
             {searchQuery || activeFilters.length > 0 || selectedSupplier

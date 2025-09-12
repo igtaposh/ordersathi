@@ -205,8 +205,8 @@ function History() {
     <motion.div
       initial={{ x: 50, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
-      className={`pt-16 p-4 flex flex-col gap-4 max-w-[500px] pb-28 w-screen min-h-screen mx-auto transition-colors duration-200 z-10 ${
-        theme === "dark" ? "bg-gray-900" : "bg-white"
+      className={`pt-20 p-4 flex flex-col gap-4 max-w-[500px] pb-28 w-screen min-h-screen mx-auto transition-colors duration-200 z-10 ${
+        theme === "dark" ? "bg-gray-900" : "bg-gray-50"
       }`}
     >
       {/* Search and Filter Component */}
@@ -234,7 +234,7 @@ function History() {
         className={`p-4 rounded-lg border ${
           theme === "dark"
             ? "bg-gray-800 border-gray-700"
-            : "bg-gray-50 border-gray-200"
+            : "bg-white border-gray-900/20"
         }`}
       >
         <div className="grid grid-cols-3 gap-4 text-center">
@@ -295,7 +295,7 @@ function History() {
           className={`p-8 text-center rounded-lg border ${
             theme === "dark"
               ? "bg-gray-800 border-gray-700 text-gray-400"
-              : "bg-gray-50 border-gray-200 text-gray-600"
+              : "bg-white border-gray-900/20 text-gray-600"
           }`}
         >
           <p className="text-sm mb-2">No history found</p>
@@ -317,7 +317,7 @@ function History() {
                 className={`w-full shadow-sm p-2 gap-2 rounded-lg flex items-center cursor-pointer transition-all duration-200 hover:scale-[1.02] ${
                   theme === "dark"
                     ? "bg-gray-800"
-                    : "bg-gray-50 border border-gray-200"
+                    : "bg-white border border-gray-900/20"
                 }`}
               >
                 {/* Icon Section */}

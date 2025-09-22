@@ -8,13 +8,14 @@ import { useTheme } from "../context/ThemeContext";
 import { RiAiGenerate } from "react-icons/ri";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { BiError, BiStore } from "react-icons/bi";
-import { MdArrowForward } from "react-icons/md";
+import { MdArrowForward, MdGppGood, MdOutlineGppBad } from "react-icons/md";
 import { GrStatusGood } from "react-icons/gr";
 import Search from "../components/Search";
 import Popup from "../components/Popup";
 import { IoMdDownload } from "react-icons/io";
 import { motion } from "framer-motion";
 import { StockReportContext } from "../context/StockReport";
+import { CgClose } from "react-icons/cg";
 
 const StockReport = () => {
   const { theme } = useTheme();
@@ -634,13 +635,7 @@ const StockReport = () => {
       <div
         className={`
           fixed w-full max-w-[500px] left-1/2 -translate-x-1/2
-          ${
-            selectedProducts.length > 0
-              ? isScrollingUp
-                ? "-bottom-32"
-                : "bottom-0"
-              : "-bottom-32"
-          }
+          ${!selectedProducts.length > 0 ? "-bottom-32" : "bottom-0"}
           transition-all duration-500 ease-in-out z-50
         `}
       >
@@ -695,52 +690,65 @@ const StockReport = () => {
           onClose={() => updateOrderState({ message: { type: "", text: "" } })}
         >
           <div
-            className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full p-6 rounded-xl flex flex-col items-center gap-4 shadow-xl border transition-all duration-200 ${
+            className={`w-full p-6 rounded-xl flex flex-col relative items-center gap-4 shadow-xl border transition-all duration-200 ${
               theme === "dark"
                 ? "bg-gray-800 border-gray-700"
                 : "bg-white border-gray-200"
             }
         `}
           >
+            <button
+              onClick={() => {
+                updateOrderState({ message: { type: "", text: "" } });
+              }}
+              className={`absolute top-3 right-3`}
+            >
+              <CgClose
+                className={`${
+                  theme === "dark" ? "text-gray-300" : "text-gray-700"
+                }`}
+                size={24}
+              />
+            </button>
             <div
               className={`
-                w-16 h-16 rounded-full
-                flex items-center justify-center
-                ${
-                  message.type === "error"
-                    ? theme === "dark"
-                      ? "bg-red-500/10"
-                      : "bg-red-50"
-                    : theme === "dark"
-                    ? "bg-green-500/10"
-                    : "bg-green-50"
-                }
-              `}
+                                  w-16 h-16 rounded-full
+                                  flex items-center justify-center mb-6
+                                  ${
+                                    message.type === "error"
+                                      ? theme === "dark"
+                                        ? "bg-red-500/10"
+                                        : "bg-red-50"
+                                      : theme === "dark"
+                                      ? "bg-gray-500/20"
+                                      : "bg-gray-200"
+                                  }
+                                `}
             >
               {message.type === "error" ? (
-                <BiError
+                <MdOutlineGppBad
                   className={`text-3xl ${
                     theme === "dark" ? "text-red-400" : "text-red-500"
                   }`}
                 />
               ) : (
-                <GrStatusGood
+                <MdGppGood
                   className={`text-3xl ${
-                    theme === "dark" ? "text-green-400" : "text-green-500"
+                    theme === "dark" ? "text-gray-400" : "text-gray-900"
                   }`}
                 />
               )}
             </div>
 
             <div
-              className={`w-full p-2 text-center rounded-lg text-xs font-medium border transition-colors duration-200 ${
+              className={`w-full p-2 items-center justify-center flex rounded-lg text-xs font-medium border transition-colors duration-200 min-h-16 ${
                 message.type === "success"
                   ? theme === "dark"
-                    ? "bg-green-900 text-green-200 border-green-700"
-                    : "bg-green-100 text-green-800 border-green-200"
+                    ? "text-white border-gray-500/20"
+                    : "text-gray-800 border-gray-800"
                   : theme === "dark"
-                  ? "bg-red-900 text-red-200 border-red-700"
-                  : "bg-red-100 text-red-800 border-red-200"
+                  ? " text-red-200 border-red-700"
+                  : " text-red-800 border-red-200"
               }`}
             >
               {message.text}
@@ -750,13 +758,11 @@ const StockReport = () => {
               <button
                 onClick={handlePDFDownload}
                 disabled={isDownloadingPDF}
-                className={`w-full flex items-center justify-center gap-2 text-xs p-3 rounded-md transition-all duration-200 font-medium
-                  ${
-                    isDownloadingPDF
-                      ? "text-gray-400 bg-[#5e2b9dc1] cursor-not-allowed"
-                      : "text-gray-300 bg-[#5e2b9d]"
-                  }
-                `}
+                className={`w-full flex items-center justify-center gap-2 text-xs p-3 rounded-md transition-all duration-200 font-medium ${
+                  isDownloadingPDF
+                    ? "text-gray-400 bg-gray-900 cursor-not-allowed"
+                    : "text-gray-300 bg-gray-900"
+                }`}
               >
                 {isDownloadingPDF ? (
                   <>
@@ -771,31 +777,6 @@ const StockReport = () => {
                 )}
               </button>
             )}
-
-            <button
-              onClick={() =>
-                updateOrderState({ message: { type: "", text: "" } })
-              }
-              className={`w-full
-                           flex-1 py-2.5 rounded-md
-                           text-[10px] font-medium
-                           transition-colors duration-200
-                           hover:scale-[0.98] active:scale-[0.97]
-      
-      ${
-        message.type === "success"
-          ? theme === "dark"
-            ? "text-green-400 bg-green-500/20"
-            : "text-green-600 bg-green-500/20"
-          : theme === "dark"
-          ? "text-red-400 bg-red-500/10"
-          : "text-red-600 bg-red-500/10"
-      }
-      
-                        `}
-            >
-              Close
-            </button>
           </div>
         </Popup>
       )}

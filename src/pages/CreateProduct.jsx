@@ -1,23 +1,20 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { use, useContext, useEffect, useState } from "react";
 import { useTheme } from "../context/ThemeContext";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { BiSolidAddToQueue } from "react-icons/bi";
-import { BiError } from "react-icons/bi";
-import { GrStatusGood } from "react-icons/gr";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { SupplierContext } from "../context/SupplierContext";
 import axiosInstance from "../api/axiosInstance";
-import Popup from "../components/Popup";
 import { IoChevronDownOutline } from "react-icons/io5";
 import { MdOutlineSave } from "react-icons/md";
 import { IoArrowUndoOutline } from "react-icons/io5";
+import CustomAlert from "../components/CustomAlert";
 
 function CreateProduct() {
   const { theme } = useTheme();
   const navigate = useNavigate();
   const { suppliers, setSuppliers } = useContext(SupplierContext);
-  
+
   const [form, setForm] = useState({
     name: "",
     weight: "",
@@ -60,6 +57,14 @@ function CreateProduct() {
   const updateState = (updates) => {
     setState((prev) => ({ ...prev, ...updates }));
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateState({ message: { type: "", text: "" } });
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [message]);
 
   const handleAdd = async () => {
     const { name, rate, supplierId, weight, mrp, type } = form;
@@ -541,7 +546,16 @@ function CreateProduct() {
           px-6 py-3
           flex items-center gap-2 z-50 
           transition-all duration-500 
-          ${form.mrp && form.rate && form.weight && form.name && form.supplierId && form.type ? " bottom-2" : "-bottom-32"}  ${
+          ${
+            form.mrp &&
+            form.rate &&
+            form.weight &&
+            form.name &&
+            form.supplierId &&
+            form.type
+              ? " bottom-2"
+              : "-bottom-32"
+          }  ${
             theme === "dark"
               ? "bg-gray-800/90 border-gray-700"
               : "bg-white border border-gray-900/20"
@@ -603,105 +617,14 @@ function CreateProduct() {
       </div>
 
       {/* Success/Error Popup */}
-      {message.text && (
-        <Popup onClose={() => updateState({ message: { type: "", text: "" } })}>
-          <div
-            className={`
-                  w-full rounded-lg px-4 pt-8 pb-4
-                  flex flex-col items-center gap-6
-                  ${theme === "dark" ? "bg-gray-800" : "bg-white"}
-                  shadow-xl border
-                  ${theme === "dark" ? "border-gray-700" : "border-gray-200"}
-               `}
-          >
-            <div
-              className={`
-                     w-12 h-12 rounded-full
-                     flex items-center justify-center
-                     ${
-                       message.type === "success"
-                         ? theme === "dark"
-                           ? "bg-green-500/10"
-                           : "bg-green-50"
-                         : theme === "dark"
-                         ? "bg-red-500/10"
-                         : "bg-red-50"
-                     }
-                  `}
-            >
-              {message.type === "success" ? (
-                <GrStatusGood
-                  className={`text-2xl ${
-                    theme === "dark" ? "text-green-400" : "text-green-500"
-                  }`}
-                />
-              ) : (
-                <BiError
-                  className={`text-2xl ${
-                    theme === "dark" ? "text-red-400" : "text-red-500"
-                  }`}
-                />
-              )}
-            </div>
 
-            <p
-              className={`text-center text-xs ${
-                message.type === "success"
-                  ? theme === "dark"
-                    ? "text-green-400"
-                    : "text-green-600"
-                  : theme === "dark"
-                  ? "text-red-400"
-                  : "text-red-600"
-              }`}
-            >
-              {message.text}
-            </p>
-
-            <div className="flex gap-3 w-full">
-              <button
-                onClick={() => updateState({ message: { type: "", text: "" } })}
-                className={`
-                           flex-1 py-2.5 rounded-md
-                           text-[10px] font-medium
-                           transition-colors duration-200
-                           hover:scale-[0.98] active:scale-[0.97]
-      
-      ${
-        message.type === "success"
-          ? theme === "dark"
-            ? "text-green-400 bg-green-500/20"
-            : "text-green-600 bg-green-500/20"
-          : theme === "dark"
-          ? "text-red-400 bg-red-500/10"
-          : "text-red-600 bg-red-500/10"
-      }
-      
-                        `}
-              >
-                Close
-              </button>
-              {message.type === "success" && (
-                <button
-                  onClick={() => navigate(`/product-profile/${newProductId}`)}
-                  className={`
-                           flex-1 py-2.5 rounded-md
-                           text-[10px] font-medium
-                           transition-colors duration-200
-                           ${
-                             theme === "dark"
-                               ? "bg-green-500/20 text-green-400 hover:bg-green-500/30"
-                               : "bg-green-500 text-white hover:bg-green-600"
-                           }
-                        `}
-                >
-                  View Product
-                </button>
-              )}
-            </div>
-          </div>
-        </Popup>
-      )}
+      <CustomAlert
+        isOpen={message?.text}
+        onClose={() => updateState({ message: { type: "", text: "" } })}
+        msgType={message?.type}
+        msg={message?.text}
+        btnLink={newProductId ? `/product-profile/${newProductId}` : null}
+      />
     </motion.div>
   );
 }

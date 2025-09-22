@@ -460,9 +460,9 @@ function NavBar() {
       {loadingStates.confirmDelete && (
         <Popup>
           <div
-            className={`relative px-6 py-8 rounded-xl flex flex-col gap-4 items-center border-2 overflow-hidden ${
+            className={`relative px-6 py-8 rounded-xl flex flex-col gap-4 items-center overflow-hidden ${
               theme === "dark"
-                ? "bg-gray-900 text-gray-100 border-gray-800"
+                ? "bg-gray-900 text-gray-100"
                 : "bg-gray-50 text-gray-800"
             }`}
           >

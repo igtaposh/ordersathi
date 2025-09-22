@@ -1,9 +1,8 @@
-import React, { useContext, useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
-import { IoIosArrowRoundBack } from "react-icons/io";
+
 import { IoArrowBack } from "react-icons/io5";
-import { scroll, scrollInfo } from "framer-motion";
 
 function NavHeader() {
   // Use React Router hooks for better navigation handling
@@ -20,14 +19,7 @@ function NavHeader() {
   };
 
   useEffect(() => {
-    let lastScrollY = window.scrollY;
-
     const handleScroll = () => {
-      // const currentScrollY = window.scrollY;
-      // const isScrollingUp = currentScrollY < lastScrollY;
-
-      // setIsScrollingUp(isScrollingUp);
-      // lastScrollY = currentScrollY;
       if (window.scrollY > 10) {
         setIsScrollingUp(true);
       } else {
@@ -73,7 +65,6 @@ function NavHeader() {
             (location === "/suppliers" && "Suppliers") ||
             (location === "/products" && "Products") ||
             (location === "/statistics" && "Statistics") ||
-            (location === "/history" && "History") ||
             (location === `/product-profile/${id}` && "Product Profile") ||
             (location === `/supplier-profile/${id}` && "Supplier Profile") ||
             (location === `/edit-product/${id}` && "Update Product") ||

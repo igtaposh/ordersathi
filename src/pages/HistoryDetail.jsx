@@ -28,6 +28,7 @@ function HistoryDetail() {
   const [item, setItem] = useState(location.state?.item || null);
   const [loading, setLoading] = useState(!item);
   const [message, setMessage] = useState({ type: "", text: "" });
+  const [deleting, setDeleting] = useState(false);
   const [downloadingPDFs, setDownloadingPDFs] = useState({});
 
   // Fetch item data if not available from navigation state
@@ -164,6 +165,44 @@ function HistoryDetail() {
       setDownloadingPDFs((prev) => ({ ...prev, [downloadKey]: false }));
     }
   };
+  const handleDelete = async () => {
+    setDeleting(true);
+
+    try {
+      await axiosInstance.delete(`/order/delete/${id}`);
+      setMessage({
+        type: "success",
+        text: "History item deleted successfully!",
+      });
+      navigate("/history");
+    } catch (err) {
+      setMessage({
+        type: "error",
+        text: "Failed to delete history item. Please try again.",
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+  const handleStockReportDelete = async () => {
+    setDeleting(true);
+
+    try {
+      await axiosInstance.delete(`/stock-report/delete/${id}`);
+      setMessage({
+        type: "success",
+        text: "History item deleted successfully!",
+      });
+      navigate("/history");
+    } catch (err) {
+      setMessage({
+        type: "error",
+        text: "Failed to delete history item. Please try again.",
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -221,7 +260,7 @@ function HistoryDetail() {
 
   return (
     <div
-      className={`pt-16 p-4 flex flex-col gap-4 max-w-[500px] pb-36 w-screen min-h-screen mx-auto transition-colors duration-200 ${
+      className={`pt-20 p-4 flex flex-col gap-4 max-w-[500px] pb-20 w-screen min-h-screen mx-auto transition-colors duration-200 ${
         theme === "dark" ? "bg-gray-900" : "bg-white"
       }`}
     >
@@ -261,75 +300,6 @@ function HistoryDetail() {
           {message.text}
         </div>
       )}
-
-      {/* Item Details Card - Consistent with History list style */}
-      <div
-        className={`shadow-sm  p-4 gap-3 rounded-lg flex items-center ${
-          theme === "dark"
-            ? "bg-gray-800"
-            : "bg-white border border-gray-900/20"
-        }`}
-      >
-        {/* Icon Section - Same as History list */}
-        <div className="flex-shrink-0">
-          <span
-            className={`relative w-12 h-12 rounded-full overflow-hidden flex items-center justify-center ${
-              theme === "dark" ? "bg-gray-900" : "bg-gray-200"
-            }`}
-          >
-            <img
-              src={item.icon}
-              alt={item.title}
-              className="w-10 h-10 object-contain"
-            />
-          </span>
-        </div>
-
-        {/* Content Section */}
-        <div className="flex-1 min-w-0">
-          <span
-            className={`text-xs ${
-              theme === "dark" ? "text-gray-400" : "text-gray-600"
-            }`}
-          >
-            {item.title}
-          </span>
-          <h3
-            className={`text-sm font-medium ${
-              theme === "dark" ? "text-gray-200" : "text-gray-800"
-            }`}
-          >
-            {item.supplierName}
-          </h3>
-          <p
-            className={`text-xs ${
-              theme === "dark" ? "text-gray-400" : "text-gray-500"
-            }`}
-          >
-            {date} at {time}
-          </p>
-        </div>
-
-        {/* Amount Display for Orders */}
-        {isOrderType && (
-          <div className="text-right ml-2">
-            <p
-              className={`text-xs ${
-                theme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
-              Total Amount
-            </p>
-            <p
-              className={`text-sm font-semibold ${
-                theme === "dark" ? "text-gray-200" : "text-gray-800"
-              }`}
-            >
-              ₹{item.amount?.toLocaleString()}
-            </p>
-          </div>
-        )}
-      </div>
 
       {/* Details Section - Dashboard card style */}
       <div
@@ -563,18 +533,20 @@ function HistoryDetail() {
         </h3>
         <div>
           <button
-            onClick={() => handleDownload("shopkeeper")}
-            disabled={downloadingPDFs[`order-${id}-shopkeeper`]}
+            onClick={() =>
+              isOrderType ? handleDelete() : handleStockReportDelete()
+            }
+            disabled={deleting}
             className={`w-full flex items-center justify-center gap-2 text-xs p-3 rounded-lg transition-all duration-200 font-medium ${
-              downloadingPDFs[`order-${id}-shopkeeper`]
-                ? "text-white bg-violet-600 opacity-60 cursor-not-allowed"
+              deleting
+                ? "text-white bg-red-300 opacity-60 cursor-not-allowed"
                 : "text-white bg-red-400 "
             }`}
           >
-            {downloadingPDFs[`order-${id}-shopkeeper`] ? (
+            {deleting ? (
               <>
                 <AiOutlineLoading3Quarters className="animate-spin" />
-                <span>Downloading...</span>
+                <span>Deleting...</span>
               </>
             ) : (
               <>

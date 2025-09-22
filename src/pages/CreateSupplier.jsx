@@ -8,7 +8,8 @@ import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import axiosInstance from "../api/axiosInstance";
 import Popup from "../components/Popup";
 import { IoArrowUndoOutline } from "react-icons/io5";
-import { MdOutlineSave } from "react-icons/md";
+import { MdOutlineClose, MdOutlineSave } from "react-icons/md";
+import CustomAlert from "../components/CustomAlert";
 
 function CreateSupplier() {
   const { theme } = useTheme();
@@ -24,9 +25,13 @@ function CreateSupplier() {
     isLoading: false,
     newSupplierId: null,
     message: { type: "", text: "" },
+    vertical: "top",
+    horizontal: "center",
+    open: false,
   });
 
-  const { isLoading, message, newSupplierId } = state;
+  const { isLoading, message, newSupplierId, vertical, horizontal, open } =
+    state;
 
   // Handle form updates
   const updateForm = (field, value) => {
@@ -37,6 +42,14 @@ function CreateSupplier() {
   const updateState = (updates) => {
     setState((prev) => ({ ...prev, ...updates }));
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateState({ message: { type: "", text: "" } });
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [message]);
 
   const handleAdd = async () => {
     const { name, phone, address } = form;
@@ -63,7 +76,7 @@ function CreateSupplier() {
       updateState({
         message: {
           type: "success",
-          text: "Supplier added successfully! to View Supplier click on view supplier button.",
+          text: "Supplier added successfully !",
         },
         newSupplierId: response.data.supplier._id,
       });
@@ -294,113 +307,14 @@ function CreateSupplier() {
       </div>
 
       {/* Success/Error Popup */}
-      {message.text && (
-        <Popup onClose={() => updateState({ message: { type: "", text: "" } })}>
-          <div
-            className={`
-                  w-full rounded-lg px-4 pt-8 pb-4
-                  flex flex-col items-center gap-4
-                  ${
-                    message.type === "success"
-                      ? theme === "dark"
-                        ? "bg-gray-800"
-                        : "bg-gray-50 border-red-900/60 border"
-                      : theme === "dark"
-                      ? "bg-gray-800"
-                      : "bg-gray-50 border-red-900/70 border-[2px]"
-                  }
 
-                  
-               `}
-          >
-            <div
-              className={`
-                     w-12 h-12 rounded-full
-                     flex items-center justify-center
-                     ${
-                       message.type === "success"
-                         ? theme === "dark"
-                           ? "bg-green-500/10"
-                           : "bg-green-100"
-                         : theme === "dark"
-                         ? "bg-red-500/10"
-                         : "bg-red-50"
-                     }
-                  `}
-            >
-              {message.type === "success" ? (
-                <GrStatusGood
-                  className={`text-2xl ${
-                    theme === "dark" ? "text-green-400" : "text-green-500"
-                  }`}
-                />
-              ) : (
-                <BiError
-                  className={`text-2xl ${
-                    theme === "dark" ? "text-red-400" : "text-red-500"
-                  }`}
-                />
-              )}
-            </div>
-
-            <p
-              className={`text-center p-4 rounded-lg text-xs ${
-                message.type === "success"
-                  ? theme === "dark"
-                    ? "text-green-400"
-                    : "text-green-700 bg-white border border-gray-900/20"
-                  : theme === "dark"
-                  ? "text-red-400"
-                  : "text-red-600"
-              }`}
-            >
-              {message.text}
-            </p>
-
-            <div className="flex gap-3 w-full">
-              <button
-                onClick={() => updateState({ message: { type: "", text: "" } })}
-                className={`
-                           flex-1 py-2.5 rounded-md
-                           text-[10px] font-medium
-                           transition-colors duration-200
-                           hover:scale-[0.98] active:scale-[0.97]
-      
-      ${
-        message.type === "success"
-          ? theme === "dark"
-            ? "text-green-400 bg-green-500/20"
-            : "text-green-600 bg-green-500/20"
-          : theme === "dark"
-          ? "text-red-400 bg-red-500/10"
-          : "text-red-600 bg-red-500/10"
-      }
-      
-                        `}
-              >
-                Close
-              </button>
-              {message.type === "success" && (
-                <button
-                  onClick={() => navigate(`/supplier-profile/${newSupplierId}`)}
-                  className={`
-                           flex-1 py-2.5 rounded-md
-                           text-[10px] font-medium
-                           transition-colors duration-200
-                           ${
-                             theme === "dark"
-                               ? "bg-green-500/20 text-green-400"
-                               : "bg-green-500/20 text-green-600"
-                           }
-                        `}
-                >
-                  View Supplier
-                </button>
-              )}
-            </div>
-          </div>
-        </Popup>
-      )}
+      <CustomAlert
+        msg={message.text}
+        msgType={message.type}
+        onClose={() => updateState({ message: { type: "", text: "" } })}
+        isOpen={!!message.text}
+        btnLink={newSupplierId ? `/supplier-profile/${newSupplierId}` : null}
+      />
     </div>
   );
 }

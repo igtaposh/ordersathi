@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="256" height="256"  >
+  <!-- Background violet gradient -->
+  <defs >
+    <linearGradient id="violetGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#4c1d95"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="100%" fill="url(#violetGrad)"/>
+
+  <!-- Document with folded corner -->
+  <!-- App Name -->
+  <text x="50%" y="53%" text-anchor="middle" font-family="Segoe UI, Roboto, Arial, sans-serif" 
+        font-size="86" font-weight="600" fill="#ffffff">
+    OrderSathi
+  </text>
+  <text x="50%" y="60%" text-anchor="middle" font-family="Segoe UI, Roboto, Arial, sans-serif" 
+        font-size="20" font-weight="300" fill="#ffffff">
+    Your Digital Partner for Easy Order Slips.
+  </text>
+</svg>

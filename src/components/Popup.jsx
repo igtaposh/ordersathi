@@ -39,7 +39,7 @@ function Popup({ children, onClose }) {
         animate={{ opacity: 1 }}
         className={`
           fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 
-          w-[90%] max-w-md z-[1000] 
+          w-[95%] max-w-md z-[1000] 
           p-6 rounded-xl
           flex flex-col items-center gap-6
         `}

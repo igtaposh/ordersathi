@@ -111,7 +111,9 @@ const Dashboard = () => {
         <Link to={"/profile"} className="w-full flex items-center ">
           <img
             className={`h-8 w-8 rounded-full  ${
-              theme === "dark" ? "bg-gray-800 border border-gray-300/80" : "bg-gray-200 border border-gray-900/80"
+              theme === "dark"
+                ? "bg-gray-800 border border-gray-300/80"
+                : "bg-gray-200 border border-gray-900/80"
             }`}
             src="https://avatar.iran.liara.run/public"
             alt=""
@@ -134,7 +136,9 @@ const Dashboard = () => {
           <Link
             to={"/create-product"}
             className={`w-full min-h-[100px] flex flex-col gap-2 p-2 items-center justify-center text-center rounded-lg scale-90  ${
-              theme === "dark" ? "bg-gray-800" : "text-gray-900 bg-gray-200 border border-gray-900/20"
+              theme === "dark"
+                ? "bg-gray-800"
+                : "text-gray-900 bg-gray-200 border border-gray-900/20"
             }`}
           >
             <span
@@ -255,7 +259,7 @@ const Dashboard = () => {
                 In Total
               </p>
             </div>
-            <span className="absolute -bottom-1 -right-3 w-24 flex items-center justify-center opacity-50">
+            <span className="absolute -bottom-2 -right-3 w-24 flex items-center justify-center opacity-50">
               <img src={supplierPNG} alt="" />
             </span>
           </Link>

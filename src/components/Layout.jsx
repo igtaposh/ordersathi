@@ -48,7 +48,10 @@ const Layout = () => {
       location === "/create-stock-report" ||
       location === `/product-profile/${id}` ||
       location === `/supplier-profile/${id}` ||
-      location === `/user-profile` || location === `/edit-user` || location === `/edit-product/${id}` || location === `/edit-supplier/${id}` ? null : (
+      location === `/user-profile` ||
+      location === `/edit-user` ||
+      location === `/edit-product/${id}` ||
+      location === `/edit-supplier/${id}` ? null : (
         <div
           className={`${
             isScrollingUp ? "bottom-0" : "-bottom-20"
@@ -152,7 +155,11 @@ const Layout = () => {
       )}
 
       {/* Page Content */}
-      {location === "/dashboard" ? null : <NavHeader />}
+      {location === "/dashboard" ||
+      location === "/history" ||
+      location === "/statistics" ? null : (
+        <NavHeader />
+      )}
 
       <Outlet />
     </div>

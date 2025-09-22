@@ -5,6 +5,7 @@ import { StockReportContext } from "../context/StockReport";
 import { useNavigate } from "react-router-dom";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { IoChevronForward } from "react-icons/io5";
+import { FaHistory } from "react-icons/fa";
 import stockReportPNG from "../assets/stock-report.png";
 import createOrder from "../assets/create-order.png";
 import Search from "../components/Search";
@@ -202,13 +203,28 @@ function History() {
   }
 
   return (
-    <motion.div
-      initial={{ x: 50, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      className={`pt-20 p-4 flex flex-col gap-4 max-w-[500px] pb-28 w-screen min-h-screen mx-auto transition-colors duration-200 z-10 ${
+    <div
+      className={` p-4 flex flex-col gap-2 max-w-[500px] pb-20 w-screen min-h-screen mx-auto transition-colors duration-200 z-10 ${
         theme === "dark" ? "bg-gray-900" : "bg-gray-50"
       }`}
     >
+      <div className={`p-2 rounded-xl transition-colors duration-200 `}>
+        <h1
+          className={`text-3xl opacity-30 font-bold text-center transition-colors duration-200 ${
+            theme === "dark" ? "text-gray-100" : "text-gray-900"
+          }`}
+        >
+          History
+        </h1>
+        <p
+          className={`text-center text-md opacity-30 mt-2 transition-colors duration-200 ${
+            theme === "dark" ? "text-gray-400" : "text-gray-600"
+          }`}
+        >
+          Track every History and be in control
+        </p>
+      </div>
+
       {/* Search and Filter Component */}
       <Search onFiltersUpdate={handleFiltersUpdate} />
 
@@ -231,7 +247,7 @@ function History() {
 
       {/* Statistics Summary */}
       <div
-        className={`p-4 rounded-lg border ${
+        className={`p-4 mt-2 rounded-lg border ${
           theme === "dark"
             ? "bg-gray-800 border-gray-700"
             : "bg-white border-gray-900/20"
@@ -397,7 +413,7 @@ function History() {
           })}
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }
 

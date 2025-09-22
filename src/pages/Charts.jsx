@@ -122,12 +122,16 @@ const Charts = () => {
       setError(`Failed to fetch top products: ${err.message}`);
       setTopProducts([]);
     } finally {
-      setLoadingStates((prev) => ({ ...prev, products: false, refreshBTN: false  }));
+      setLoadingStates((prev) => ({
+        ...prev,
+        products: false,
+        refreshBTN: false,
+      }));
     }
   }, [setTopProducts, setLoadingStates, setError]);
 
   const fetchMonthlyData = useCallback(async () => {
-    setLoadingStates((prev) => ({ ...prev, monthly: true, refreshBTN: true  }));
+    setLoadingStates((prev) => ({ ...prev, monthly: true, refreshBTN: true }));
     setError(null);
 
     try {
@@ -177,12 +181,20 @@ const Charts = () => {
     } catch (err) {
       setError(`Failed to fetch monthly data: ${err.message}`);
     } finally {
-      setLoadingStates((prev) => ({ ...prev, monthly: false, refreshBTN: false  }));
+      setLoadingStates((prev) => ({
+        ...prev,
+        monthly: false,
+        refreshBTN: false,
+      }));
     }
   }, [setMonthlyData, setLoadingStates, setError]);
 
   const fetchTopSuppliers = useCallback(async () => {
-    setLoadingStates((prev) => ({ ...prev, suppliers: true, refreshBTN: true  }));
+    setLoadingStates((prev) => ({
+      ...prev,
+      suppliers: true,
+      refreshBTN: true,
+    }));
 
     try {
       const response = await axiosInstance.get("/order/stats/top-suppliers");
@@ -192,12 +204,16 @@ const Charts = () => {
     } catch (err) {
       setTopSuppliers([]);
     } finally {
-      setLoadingStates((prev) => ({ ...prev, suppliers: false, refreshBTN: false  }));
+      setLoadingStates((prev) => ({
+        ...prev,
+        suppliers: false,
+        refreshBTN: false,
+      }));
     }
   }, [setTopSuppliers, setLoadingStates]);
 
   const fetchRecentOrders = useCallback(async () => {
-    setLoadingStates((prev) => ({ ...prev, recent: true, refreshBTN: true  }));
+    setLoadingStates((prev) => ({ ...prev, recent: true, refreshBTN: true }));
 
     try {
       const response = await axiosInstance.get("/order");
@@ -217,7 +233,11 @@ const Charts = () => {
     } catch (err) {
       setRecentOrders([]);
     } finally {
-      setLoadingStates((prev) => ({ ...prev, recent: false, refreshBTN: false  }));
+      setLoadingStates((prev) => ({
+        ...prev,
+        recent: false,
+        refreshBTN: false,
+      }));
     }
   }, [setRecentOrders, setLoadingStates]);
 
@@ -260,22 +280,16 @@ const Charts = () => {
         theme === "dark" ? "bg-gray-900" : "bg-gray-50"
       }`}
     >
-      <div
-        className={`mt-16 mb-6 p-4 rounded-xl shadow-sm transition-colors duration-200 ${
-          theme === "dark"
-            ? "bg-gray-800"
-            : "bg-white border border-gray-900/20"
-        }`}
-      >
+      <div className={`mb-2 p-2 rounded-xl transition-colors duration-200 `}>
         <h1
-          className={`text-md font-bold text-center transition-colors duration-200 ${
+          className={`text-3xl opacity-30 font-bold text-center transition-colors duration-200 ${
             theme === "dark" ? "text-gray-100" : "text-gray-900"
           }`}
         >
-          📊 Business Analytics
+          Business Analytics
         </h1>
         <p
-          className={`text-center text-xs mt-2 transition-colors duration-200 ${
+          className={`text-center text-md opacity-30 mt-2 transition-colors duration-200 ${
             theme === "dark" ? "text-gray-400" : "text-gray-600"
           }`}
         >
@@ -632,7 +646,13 @@ const Charts = () => {
         >
           Refresh Data
           <span>
-            <HiOutlineRefresh className={`${loadingStates.refreshBTN ? "rotate-{-180deg} animate-spin" : null }`} />
+            <HiOutlineRefresh
+              className={`${
+                loadingStates.refreshBTN
+                  ? "rotate-{-180deg} animate-spin"
+                  : null
+              }`}
+            />
           </span>
         </button>
       </div>

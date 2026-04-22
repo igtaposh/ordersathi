@@ -24,7 +24,7 @@ function NavBar() {
 
   const { theme, toggleTheme } = useTheme();
   const [otp, setOtp] = useState();
-  const [phone, setPhone] = useState();
+  const [email, setEmail] = useState(user?.email || "");
   const [stepTwo, setStepTwo] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isAppearanceOpen, setIsAppearanceOpen] = useState(false);
@@ -107,16 +107,18 @@ function NavBar() {
     // Clear any existing messages
     setMessage({ type: "", text: "" });
 
-    // Validate phone number format
+    const normalizedEmail = email?.trim().toLowerCase();
+    const registeredEmail = user?.email?.trim().toLowerCase();
+
+    // Validate email format
     if (
-      !phone ||
-      phone.length !== 10 ||
-      !/^[6-9]\d{9}$/.test(phone) ||
-      phone !== user.phone
+      !normalizedEmail ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail) ||
+      normalizedEmail !== registeredEmail
     ) {
       setMessage({
         type: "error",
-        text: "Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9",
+        text: "Please enter your registered email address",
       });
       return;
     }
@@ -127,16 +129,14 @@ function NavBar() {
     try {
       // Send OTP request to backend
       const response = await axiosInstance.post("/auth/send-otp", {
-        phone,
+        email: normalizedEmail,
       });
       setStepTwo(true);
       setLoading(false);
       console.log(response);
       setMessage({
         type: "success",
-        text: `OTP successfully sent! Please check your phone ****${user?.phone.slice(
-          -4
-        )} and enter the code below.`,
+        text: `OTP successfully sent! Please check your email ${user?.email} and enter the code below.`,
       });
     } catch (err) {
       // Handle API errors gracefully
@@ -157,7 +157,7 @@ function NavBar() {
     setLoading(true);
     try {
       const res = await axiosInstance.post("/auth/verify-otp", {
-        phone,
+        email: email?.trim().toLowerCase(),
         otp,
       });
       HandleDeleteAccount();
@@ -337,8 +337,8 @@ function NavBar() {
                     theme === "light"
                       ? "text-blue-500"
                       : theme === "dark"
-                      ? "text-yellow-400"
-                      : "text-yellow-500"
+                        ? "text-yellow-400"
+                        : "text-yellow-500"
                   }`}
                 />
                 <span
@@ -346,8 +346,8 @@ function NavBar() {
                     theme === "light"
                       ? "text-blue-700 dark:text-blue-300 font-medium"
                       : theme === "dark"
-                      ? "text-gray-300"
-                      : "text-gray-700"
+                        ? "text-gray-300"
+                        : "text-gray-700"
                   }`}
                 >
                   Light
@@ -491,7 +491,7 @@ function NavBar() {
                 }`}
               >
                 To continue, please verify your identity by confirming your
-                registered mobile number. An OTP will be sent for verification.
+                registered email address. An OTP will be sent for verification.
               </p>
             </div>
 
@@ -565,30 +565,29 @@ function NavBar() {
                   }`}
                 >
                   <p className={`text-center text-[10px]`}>
-                    Confirm your phone number to receive OTP
+                    Confirm your email address to receive OTP
                     <br />
-                    Your number ends with ****{user?.phone.slice(-4)}
+                    {user?.email}
                   </p>
                 </div>
               )}
               <input
-                maxLength={10}
-                id="mobile"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className={`h-12 rounded-lg px-4 outline-none border text-xs tracking-wider text-center placeholder:text-xs ${
                   theme === "dark"
                     ? "bg-gray-800/60 border-gray-600/60 text-gray-100"
                     : "bg-gray-50 border-gray-300 text-gray-900"
                 }`}
-                placeholder="Enter 10-digit mobile number"
-                type="tel"
+                placeholder="Enter registered email address"
+                type="email"
               />
               <button
                 onClick={handleSendOtp}
-                disabled={phone?.length !== 10}
+                disabled={!email}
                 className={`w-full py-3 rounded-lg font-medium text-xs flex justify-center items-center gap-2 transition ${
-                  phone?.length === 10
+                  email
                     ? "bg-green-600/50 text-white"
                     : "cursor-not-allowed bg-green-600/30 text-green-600 "
                 }`}

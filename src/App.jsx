@@ -1,40 +1,48 @@
-import React, { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import Layout from './components/Layout';
-import ProtectedRoute from './components/ProtectedRoute';
+import React, { lazy, Suspense } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Layout from "./components/Layout";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Eager load critical components
-import Login from './pages/Login';
-import Register from './pages/Register';
-import WrongRoute from './pages/WrongRoute';
-import NavBar from './pages/NavBar';
-import HistoryDetail from './pages/HistoryDetail';
-import Charts from './pages/Charts';
-import CreateProduct from './pages/CreateProduct';
-import CreateSupplier from './pages/CreateSupplier';
-import {useTheme} from './context/ThemeContext';
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import WrongRoute from "./pages/WrongRoute";
+import NavBar from "./pages/NavBar";
+import HistoryDetail from "./pages/HistoryDetail";
+import Charts from "./pages/Charts";
+import CreateProduct from "./pages/CreateProduct";
+import CreateSupplier from "./pages/CreateSupplier";
+import { useTheme } from "./context/ThemeContext";
 
 // Lazy load non-critical components
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Products = lazy(() => import('./pages/Products'));
-const Suppliers = lazy(() => import('./pages/Suppliers'));
-const CreateOrder = lazy(() => import('./pages/CreateOrder'));
-const UserProfile = lazy(() => import('./pages/UserProfile'));
-const History = lazy(() => import('./pages/HIstory'));
-const StockReport = lazy(() => import('./pages/StockReport'));
-const EditProfile = lazy(() => import('./pages/EditProfile'));
-const ProductProfile = lazy(() => import('./pages/ProductProfile'));
-const SupplierProfile = lazy(() => import('./pages/SupplierProfile'));
-const EditSupplier = lazy(() => import('./pages/EditSupplier'));
-const EditProduct = lazy(() => import('./pages/EditProduct'));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Products = lazy(() => import("./pages/Products"));
+const Suppliers = lazy(() => import("./pages/Suppliers"));
+const CreateOrder = lazy(() => import("./pages/CreateOrder"));
+const UserProfile = lazy(() => import("./pages/UserProfile"));
+const History = lazy(() => import("./pages/HIstory"));
+const StockReport = lazy(() => import("./pages/StockReport"));
+const EditProfile = lazy(() => import("./pages/EditProfile"));
+const ProductProfile = lazy(() => import("./pages/ProductProfile"));
+const SupplierProfile = lazy(() => import("./pages/SupplierProfile"));
+const EditSupplier = lazy(() => import("./pages/EditSupplier"));
+const EditProduct = lazy(() => import("./pages/EditProduct"));
 
 // Loading component for suspense fallback
 const Loading = () => {
   const { theme } = useTheme();
   return (
-    <div className={`flex flex-col gap-4 items-center justify-center h-screen w-screen ${theme === "dark" ? "bg-gray-900" : "bg-white"}`}>
-      <div className={`animate-spin rounded-full h-10 w-10 border-t-2 ${theme === "dark" ? "border-gray-200" : "border-gray-800"}`}></div>
-      <p className={`text-md ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Loading...</p>
+    <div
+      className={`flex flex-col gap-4 items-center justify-center h-screen w-screen ${theme === "dark" ? "bg-gray-900" : "bg-white"}`}
+    >
+      <div
+        className={`animate-spin rounded-full h-10 w-10 border-t-2 ${theme === "dark" ? "border-gray-200" : "border-gray-800"}`}
+      ></div>
+      <p
+        className={`text-md ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}
+      >
+        Loading...
+      </p>
     </div>
   );
 };

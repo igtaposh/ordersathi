@@ -1,289 +1,173 @@
-# 🛒 OrderSathi - Shopkeeper Order Management System
+# OrderSathi Frontend
 
 <div align="center">
   <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React">
   <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite">
   <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS">
+  <img src="https://img.shields.io/badge/React_Router-CA4245?style=for-the-badge&logo=react-router&logoColor=white" alt="React Router">
   <img src="https://img.shields.io/badge/Axios-5A29E4?style=for-the-badge&logo=axios&logoColor=white" alt="Axios">
-  <img src="https://img.shields.io/badge/React_Icons-E10098?style=for-the-badge&logo=react-icons&logoColor=white" alt="React Icons">
 </div>
 
----
+OrderSathi is a frontend web app for shopkeepers and small businesses to manage suppliers, products, orders, and stock reports from one dashboard. It is built with React + Vite and connects to the OrderSathi backend API.
 
-**OrderSathi** is a comprehensive full-stack web application designed for shopkeepers and small businesses to streamline their operations. The app now features a highly optimized, modern user interface with professional-grade form designs, enhanced icons, and typography that reflects a large-scale professional solution.
+## Features
 
-## ✨ Key Features
+- OTP-based login and registration flow
+- Dashboard with business metrics and chart-based insights
+- Supplier management with create, update, view, and delete workflows
+- Product management with supplier linking and profile pages
+- Order creation with automatic totals and history tracking
+- Stock report generation and downloadable PDF workflows
+- Dark/light theme support and responsive UI across devices
 
-### 🔐 **Authentication & Security**
+## Tech Stack
 
-- **OTP-based Registration/Login** with secure verification
-- **JWT Authentication** with cookie-based sessions
-- **User Profile Management** with account settings
-- **Secure logout** and session management
+| Technology       | Version   | Use                    |
+| ---------------- | --------- | ---------------------- |
+| React            | ^19.1.0   | UI framework           |
+| Vite             | ^7.0.4    | Build and dev server   |
+| Tailwind CSS     | ^3.4.17   | Utility-first styling  |
+| React Router DOM | ^7.6.3    | Routing                |
+| Axios            | ^1.10.0   | API client             |
+| Recharts         | ^3.1.2    | Charts and analytics   |
+| Framer Motion    | ^12.23.12 | Motion and transitions |
 
-### 👥 **Supplier Management**
+## Project Structure
 
-- ➕ Add new suppliers with contact details
-- 📝 Update supplier information and profiles
-- 🗑️ Delete suppliers with confirmation dialogs
-- 📋 Organized list views featuring smooth, animated dropdowns
-- 🔍 Advanced search and filter capabilities
-
-### 📦 **Product Management**
-
-- 🆕 Add or edit products linked to suppliers with real-time validations
-- 📊 Maintain product details including dynamic weight conversion, rate, and MRP fields
-- ✏️ Modern editing interface using optimized form components with intuitive icons and professional fonts
-- 🗂️ Categorize products by type with custom dropdown animations
-- 🔍 Robust search and filtering system
-- 📱 Detailed product profiles with visually appealing layouts
-
-### 📋 **Order Management**
-
-- 🛒 Create detailed orders with multiple products using a newly optimized, professional-looking form interface
-- 💰 Automatic calculation of total amount and weight with real-time feedback
-- 📄 Generate PDF invoices instantly (shopkeeper & supplier versions)
-- 📈 View comprehensive order history and detailed summaries
-- 📱 Fully responsive order creation interface
-
-### 📊 **Stock Reports & Analytics**
-
-- 📝 Create comprehensive stock reports with a professional presentation
-- 📄 Generate and download detailed PDF stock reports
-- 📈 Interactive dashboard with business insights, order summaries, and trend analysis
-- 💾 Offline report downloads for flexible inventory management
-
-### 🎨 **User Experience & Design**
-
-- 🌙 **Dark/Light Mode** toggle with smooth animated transitions
-- 📱 **Fully Responsive Design** optimized for mobile, tablet, and desktop
-- ⚡ **Fast Performance** using Vite and React optimizations
-- 🎯 **Intuitive Navigation** featuring minimalistic icons, improved typography, and state-of-the-art form components
-- 🔄 **Real-time Feedback & Validation** with modern loaders and error displays
-
-## 🛠️ Tech Stack
-
-### **Frontend Technologies**
-
-| Technology                                                                                                     | Purpose             | Version |
-| -------------------------------------------------------------------------------------------------------------- | ------------------- | ------- |
-| ![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)                     | UI Framework        | ^19.1.0 |
-| ![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat&logo=vite&logoColor=white)                         | Build Tool          | ^7.0.4  |
-| ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat&logo=tailwind-css&logoColor=white) | Styling Framework   | ^3.4.17 |
-| ![React Router](https://img.shields.io/badge/React_Router-CA4245?style=flat&logo=react-router&logoColor=white) | Client-side Routing | ^7.6.3  |
-| ![Axios](https://img.shields.io/badge/Axios-5A29E4?style=flat&logo=axios&logoColor=white)                      | HTTP Client         | ^1.10.0 |
-| ![React Icons](https://img.shields.io/badge/React_Icons-E10098?style=flat&logo=react-icons&logoColor=white)    | Icon Library        | ^5.5.0  |
-
-### **Development Tools**
-
-- **ESLint** - Code linting and quality assurance
-- **PostCSS** - CSS pre-processing
-- **Autoprefixer** - Automatic vendor prefixing
-
-## 📁 Frontend Project Structure
-
-```
+```text
 ordersathi/
-├── public/                     # Static assets
-├── src/
-│   ├── api/                    # API configuration
-│   │   └── axiosInstance.js    # Axios setup with interceptors
-│   ├── assets/                 # Images and static files
-│   │   └── logo.png            # App logo
-│   ├── components/             # Reusable components
-│   │   ├── Layout.jsx          # Main app layout
-│   │   ├── NavHeader.jsx       # Navigation header
-│   │   ├── Orders.jsx          # Order history component
-│   │   ├── ProtectedRoute.jsx  # Route protection
-│   │   ├── SideNav.jsx         # Side navigation
-│   │   ├── StatsTable.jsx      # Statistics table
-│   │   └── Stocks.jsx          # Stock management
-│   ├── context/                # React Context providers
-│   │   ├── AuthContext.jsx     # Authentication state
-│   │   ├── OrderContext.jsx    # Order state management
-│   │   ├── ProductContext.jsx  # Product state management
-│   │   ├── Stats.jsx           # Statistics context
-│   │   ├── StockReport.jsx     # Stock report context
-│   │   ├── SupplierContext.jsx # Supplier state management
-│   │   └── ThemeContext.jsx    # Dark/Light mode context
-│   ├── pages/                  # Application pages
-│   │   ├── About.jsx           # Application information
-│   │   ├── CreateOrder.jsx     # Order creation form
-│   │   ├── Dashboard.jsx       # Main dashboard
-│   │   ├── EditProduct.jsx     # Product editing page
-│   │   ├── EditProfile.jsx     # User profile editing page
-│   │   ├── EditSupplier.jsx    # Supplier editing page
-│   │   ├── History.jsx         # Order history page
-│   │   ├── Login.jsx           # User login page
-│   │   ├── ProductProfile.jsx  # Product details page
-│   │   ├── Products.jsx        # Product management page
-│   │   ├── Register.jsx        # User registration page
-│   │   ├── StockReport.jsx     # Stock reporting page
-│   │   ├── SupplierProfile.jsx # Supplier details page
-│   │   ├── Suppliers.jsx       # Supplier management page
-│   │   ├── UserProfile.jsx     # User profile page
-│   │   └── WrongRoute.jsx      # 404 page
-│   ├── utils/                  # Utility functions
-│   │   └── darkModeGuide.js    # Theme implementation guide
-│   ├── App.jsx                 # Main app component with routing
-│   ├── index.css               # Global styles
-│   └── main.jsx                # App entry point
-├── index.html                  # HTML template
-├── package.json                # Dependencies and scripts
-├── tailwind.config.js          # Tailwind configuration
-├── vite.config.js              # Vite configuration
-└── vercel.json                 # Vercel deployment config
+|-- public/
+|-- src/
+|   |-- api/
+|   |   `-- axiosInstance.js
+|   |-- assets/
+|   |-- components/
+|   |   |-- CustomAlert.jsx
+|   |   |-- Layout.jsx
+|   |   |-- NavHeader.jsx
+|   |   |-- Popup.jsx
+|   |   |-- ProductCard.jsx
+|   |   |-- ProtectedRoute.jsx
+|   |   |-- Search.jsx
+|   |   `-- SupplierCard.jsx
+|   |-- context/
+|   |   |-- AuthContext.jsx
+|   |   |-- OrderContext.jsx
+|   |   |-- ProductContext.jsx
+|   |   |-- StatsContext.jsx
+|   |   |-- StockReport.jsx
+|   |   |-- SupplierContext.jsx
+|   |   `-- ThemeContext.jsx
+|   |-- pages/
+|   |   |-- Charts.jsx
+|   |   |-- CreateOrder.jsx
+|   |   |-- CreateProduct.jsx
+|   |   |-- CreateSupplier.jsx
+|   |   |-- Dashboard.jsx
+|   |   |-- EditProduct.jsx
+|   |   |-- EditProfile.jsx
+|   |   |-- EditSupplier.jsx
+|   |   |-- HIstory.jsx
+|   |   |-- HistoryDetail.jsx
+|   |   |-- Login.jsx
+|   |   |-- NavBar.jsx
+|   |   |-- ProductProfile.jsx
+|   |   |-- Products.jsx
+|   |   |-- Register.jsx
+|   |   |-- StockReport.jsx
+|   |   |-- SupplierProfile.jsx
+|   |   |-- Suppliers.jsx
+|   |   |-- UserProfile.jsx
+|   |   `-- WrongRoute.jsx
+|   |-- utils/
+|   |   `-- darkModeGuide.js
+|   |-- App.jsx
+|   |-- index.css
+|   `-- main.jsx
+|-- eslint.config.js
+|-- index.html
+|-- package.json
+|-- postcss.config.js
+|-- tailwind.config.js
+|-- vercel.json
+`-- vite.config.js
 ```
 
-## 🚀 Getting Started
+## Getting Started
 
-### 📋 Prerequisites
+### Prerequisites
 
-- **Node.js (v16 or higher)** – [Download here](https://nodejs.org/)
-- **npm** or **yarn** – Comes with Node.js
-- **Git** – [Download here](https://git-scm.com/)
+- Node.js 18+ recommended
+- npm or yarn
 
-### ⚙️ Installation & Setup
-
-1. **Clone the repository**
-
-   ```bash
-   git clone https://github.com/igtaposh/ordersathi.git
-   cd ordersathi/ordersathi
-   ```
-
-2. **Install dependencies**
-
-   ```bash
-   npm install
-   # or
-   yarn install
-   ```
-
-3. **Environment Configuration**
-
-   Create a `.env` file in the root directory:
-
-   ```env
-   # API Configuration
-   VITE_API_BASE_URL=https://ordersathi.onrender.com/api
-   # For local development, you can use:
-   # VITE_API_BASE_URL=http://localhost:4000/api
-   ```
-
-4. **Start the development server**
-
-   ```bash
-   npm run dev
-   # or
-   yarn dev
-   ```
-
-5. **Access the application**
-   - Frontend: `http://localhost:5173`
-   - The app will automatically open in your default browser
-
-## 📱 Usage Guide
-
-### 1. **Onboarding**
-
-- Seamless registration with OTP verification
-- Quick profile setup with modern form designs that convey a professional look
-
-### 2. **Supplier & Product Management**
-
-- Easily add, update, and delete supplier information using contemporary, animated dropdowns and button icons
-- Manage products with detailed, dynamic fields and real-time validations
-
-### 3. **Order Creation**
-
-- Create multiple product orders effortlessly with a smooth, optimized form interface
-- Enjoy instant feedback on totals and weights with automatic calculations and modern loaders
-
-### 4. **Reports & Analytics**
-
-- Generate professional PDF reports for stock and orders
-- Access interactive, data-rich dashboards with company-grade insights
-
-### 5. **Customization & UX**
-
-- Toggle between dark and light modes with smooth transitions
-- Experience a fully polished interface featuring enhanced icons, font improvements, and intuitive navigation
-
-## 🔧 Development
-
-### **Available Scripts**
+### Install
 
 ```bash
-# Start development server
+git clone https://github.com/igtaposh/ordersathi.git
+cd ordersathi/ordersathi
+npm install
+```
+
+### Environment Variables
+
+Create a `.env` file in the frontend root:
+
+```env
+VITE_API_BASE_URL=https://ordersathi.onrender.com/api
+# Local backend example:
+# VITE_API_BASE_URL=http://localhost:4000/api
+```
+
+### Run Locally
+
+```bash
 npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
-
-# Run ESLint
-npm run lint
 ```
 
-### **Production Build & Deployment**
+Frontend will run at `http://localhost:5173` by default.
+
+## Scripts
 
 ```bash
-# Create an optimized production build
-npm run build
-
-# The build files will be in the 'dist' folder
-# Deploy the 'dist' folder to your hosting service
+npm run dev      # Start development server
+npm run build    # Build for production
+npm run preview  # Preview production build
+npm run lint     # Run ESLint
 ```
 
-## 🌟 Key UI & Design Updates
+## Deployment
 
-- **Optimized Forms:** Enhanced layouts, professional font choices, and intuitive component spacing.
-- **Iconography:** Updated icons (e.g., discard and save actions now use meaningful icons) for a clear visual hierarchy.
-- **Animations:** Smooth transitions and animated dropdowns for a modern, corporate look.
-- **Theming:** Robust dark/light mode support with consistent styling across the app.
+The app is configured for Vercel via `vercel.json`.
 
-## 🤝 Contributing
+```bash
+npm run build
+```
 
-We welcome contributions! Please follow these steps:
+Deploy the generated `dist` folder, or connect the repository directly to Vercel.
+
+## Backend Pairing
+
+This repository folder contains the frontend only. It expects a running OrderSathi backend API for authentication, orders, products, suppliers, and stock reports.
+
+## Contributing
 
 1. Fork the repository.
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`).
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-4. Push the branch (`git push origin feature/AmazingFeature`).
-5. Open a Pull Request.
+2. Create a branch: `git checkout -b feature/your-feature`
+3. Commit changes: `git commit -m "feat: add your feature"`
+4. Push your branch and open a pull request.
 
-## 📝 License
+## License
 
-This project is licensed under the **MIT License** – see the [LICENSE](LICENSE) file for details.
+MIT License.
 
-## 👨‍💻 Author
+## Author
 
-**Taposh Debnath (igtaposh)**
+Taposh Debnath (igtaposh)
 
-- GitHub: [@igtaposh](https://github.com/igtaposh)
+- GitHub: https://github.com/igtaposh
 - Email: debnathtaposh58@gmail.com
-- Phone: +91 9593197988
 
-## 🙏 Acknowledgments
+## Support
 
-- Thanks to the open-source libraries—including React, Vite, and Tailwind CSS—that made this project possible.
-- Special recognition goes to the communities driving innovation in web development.
-
-## 📞 Support
-
-If you encounter any issues or have questions:
-
-1. Check the [Issues](https://github.com/igtaposh/ordersathi/issues) page.
-2. Open a new issue with detailed information.
-3. Contact the developer at debnathtaposh58@gmail.com.
-
----
-
-<div align="center">
-  <p>Made with ❤️ for shopkeepers and small businesses everywhere</p>
-  <p>⭐ Star this repo if you find it helpful!</p>
-  <p><strong>Live Demo:</strong> <a href="https://ordersathi.vercel.app">OrderSathi App</a></p>
-</div>
+- Open an issue: https://github.com/igtaposh/ordersathi/issues
+- Live app: https://ordersathi.vercel.app
